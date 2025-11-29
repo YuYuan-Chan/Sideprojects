@@ -51,16 +51,19 @@ function drawChart(canvasId, data, color = '#ff69b4') {
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
-    const padding = 10;
+    const padding = 40; // 增加内边距以容纳标注
     const chartHeight = height - padding * 2;
     const chartWidth = width - padding * 2;
     
-    // 绘制蓝色背景
-    ctx.fillStyle = '#1e3a8a'; // 深蓝色背景
+    // 计算基准价格（用于百分比计算）
+    const basePrice = data[0] || minValue;
+    
+    // 绘制深色背景（接近黑色）
+    ctx.fillStyle = '#0a0a0a'; // 深色背景
     ctx.fillRect(0, 0, width, height);
     
     // 绘制背景网格
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     
     // 水平网格线
@@ -81,35 +84,57 @@ function drawChart(canvasId, data, color = '#ff69b4') {
         ctx.stroke();
     }
     
+    // 绘制水平参考线（虚线）
+    // 中间参考线（浅蓝色）
+    const midY = padding + chartHeight / 2;
+    ctx.strokeStyle = 'rgba(135, 206, 250, 0.6)'; // 浅蓝色虚线
+    ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(padding, midY);
+    ctx.lineTo(width - padding, midY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // 上方参考线（浅灰色）
+    const upperY = padding + chartHeight / 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(padding, upperY);
+    ctx.lineTo(width - padding, upperY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
     // 计算蜡烛图数据（OHLC）
     const candles = [];
     for (let i = 0; i < data.length; i++) {
         const currentPrice = data[i];
         const prevPrice = i > 0 ? data[i - 1] : currentPrice;
-        
+
         // 模拟开高低收数据
         const open = prevPrice;
         const close = currentPrice;
         const high = Math.max(open, close) + Math.abs(close - open) * 0.3;
         const low = Math.min(open, close) - Math.abs(close - open) * 0.3;
-        
+
         candles.push({ open, high, low, close });
     }
-    
+
     // 绘制蜡烛图
     const candleWidth = chartWidth / candles.length * 0.8;
     const candleSpacing = chartWidth / candles.length;
-    
+
     candles.forEach((candle, index) => {
         const x = padding + index * candleSpacing + candleSpacing / 2;
         const isBullish = candle.close >= candle.open;
-        
+
         // 计算Y坐标
         const highY = padding + chartHeight - ((candle.high - minValue) / range) * chartHeight;
         const lowY = padding + chartHeight - ((candle.low - minValue) / range) * chartHeight;
         const openY = padding + chartHeight - ((candle.open - minValue) / range) * chartHeight;
         const closeY = padding + chartHeight - ((candle.close - minValue) / range) * chartHeight;
-        
+
         // 绘制上下影线
         ctx.strokeStyle = isBullish ? '#3b82f6' : '#ff69b4'; // 蓝色上涨，粉色下跌
         ctx.lineWidth = 1;
@@ -117,12 +142,12 @@ function drawChart(canvasId, data, color = '#ff69b4') {
         ctx.moveTo(x, highY);
         ctx.lineTo(x, lowY);
         ctx.stroke();
-        
+
         // 绘制蜡烛实体
         const bodyTop = Math.min(openY, closeY);
         const bodyBottom = Math.max(openY, closeY);
         const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
-        
+
         if (isBullish) {
             // 上涨：蓝色实心
             ctx.fillStyle = '#3b82f6'; // 蓝色
@@ -132,11 +157,66 @@ function drawChart(canvasId, data, color = '#ff69b4') {
             ctx.fillStyle = '#ff69b4'; // 粉色
             ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
         }
-        
+
         // 绘制边框
         ctx.strokeStyle = isBullish ? '#60a5fa' : '#ff8cc8';
         ctx.lineWidth = 1;
         ctx.strokeRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+    });
+    
+    // 绘制价格标注（在关键点）
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    
+    // 找到局部最高点和最低点进行标注
+    const significantPoints = [];
+    for (let i = 1; i < data.length - 1; i++) {
+        const prev = data[i - 1];
+        const curr = data[i];
+        const next = data[i + 1];
+        
+        // 局部最高点
+        if (curr > prev && curr > next) {
+            significantPoints.push({ index: i, price: curr, type: 'high' });
+        }
+        // 局部最低点
+        if (curr < prev && curr < next) {
+            significantPoints.push({ index: i, price: curr, type: 'low' });
+        }
+    }
+    
+    // 限制标注数量，避免过于拥挤
+    const maxAnnotations = 12;
+    const step = Math.max(1, Math.floor(significantPoints.length / maxAnnotations));
+    
+    significantPoints.forEach((point, idx) => {
+        if (idx % step !== 0 && significantPoints.length > maxAnnotations) return;
+        
+        const x = padding + point.index * candleSpacing + candleSpacing / 2;
+        const normalizedValue = (point.price - minValue) / range;
+        const y = padding + chartHeight - (normalizedValue * chartHeight);
+        
+        // 计算百分比变化
+        const percentChange = ((point.price - basePrice) / basePrice) * 100;
+        const percentText = percentChange >= 0 
+            ? `+${percentChange.toFixed(1)}%` 
+            : `${percentChange.toFixed(1)}%`;
+        
+        // 绘制标注线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + 30, y - 15);
+        ctx.stroke();
+        
+        // 绘制标注文本
+        const priceText = basePrice.toFixed(1);
+        const fullText = `${priceText} (${percentText})`;
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(fullText, x + 35, y - 15);
     });
 }
 
