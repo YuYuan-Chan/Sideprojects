@@ -35,33 +35,70 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
     requestAnimationFrame(update);
 }
 
-// 图表绘制函数
+// 图表绘制函数（优化为折线图，更适合实时数据）
 function drawChart(canvasId, data, color = '#00ff88') {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-
+    
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
-
+    
     ctx.clearRect(0, 0, width, height);
-
-    if (!data || data.length === 0) return;
-
+    
+    if (!data || data.length < 2) return;
+    
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
-
-    const barWidth = width / data.length;
-    const padding = 2;
-
+    
+    // 绘制背景网格
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = (height / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+    }
+    
+    // 绘制折线图
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
     data.forEach((value, index) => {
-        const barHeight = ((value - minValue) / range) * (height - 10);
-        const x = index * barWidth;
-        const y = height - barHeight - 5;
-
-        ctx.fillStyle = color;
-        ctx.fillRect(x + padding, y, barWidth - padding * 2, barHeight);
+        const x = (width / (data.length - 1)) * index;
+        const normalizedValue = (value - minValue) / range;
+        const y = height - (normalizedValue * (height - 20)) - 10;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    
+    // 填充区域
+    ctx.fillStyle = color + '20';
+    ctx.lineTo(width, height - 10);
+    ctx.lineTo(0, height - 10);
+    ctx.closePath();
+    ctx.fill();
+    
+    // 绘制数据点
+    ctx.fillStyle = color;
+    data.forEach((value, index) => {
+        const x = (width / (data.length - 1)) * index;
+        const normalizedValue = (value - minValue) / range;
+        const y = height - (normalizedValue * (height - 20)) - 10;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
     });
 }
 
@@ -145,35 +182,34 @@ function initAppleMusic() {
 
 // 从 TradingView API 获取比特币实时价格
 let bitcoinPriceHistory = [];
+let lastBitcoinPrice = 0;
+let priceUpdateInterval = null;
+
 async function fetchBitcoinPrice() {
     try {
         // 使用多个 API 源以确保可靠性
-        // 方法1: CoinGecko API
+        // 方法1: CoinGecko API（最快）
         try {
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true', {
+                cache: 'no-cache'
+            });
             const data = await response.json();
             if (data.bitcoin && data.bitcoin.usd) {
-                const price = Math.floor(data.bitcoin.usd);
-                bitcoinPriceHistory.push(price);
-                if (bitcoinPriceHistory.length > 15) {
-                    bitcoinPriceHistory.shift();
-                }
+                const price = parseFloat(data.bitcoin.usd);
                 return price;
             }
         } catch (e) {
             console.log('CoinGecko API 失败，尝试备用方案');
         }
 
-        // 方法2: Binance API
+        // 方法2: Binance API（实时性最好）
         try {
-            const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+            const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
+                cache: 'no-cache'
+            });
             const binanceData = await binanceResponse.json();
             if (binanceData.price) {
-                const price = Math.floor(parseFloat(binanceData.price));
-                bitcoinPriceHistory.push(price);
-                if (bitcoinPriceHistory.length > 15) {
-                    bitcoinPriceHistory.shift();
-                }
+                const price = parseFloat(binanceData.price);
                 return price;
             }
         } catch (e) {
@@ -182,14 +218,12 @@ async function fetchBitcoinPrice() {
 
         // 方法3: CoinCap API
         try {
-            const coinCapResponse = await fetch('https://api.coincap.io/v2/assets/bitcoin');
+            const coinCapResponse = await fetch('https://api.coincap.io/v2/assets/bitcoin', {
+                cache: 'no-cache'
+            });
             const coinCapData = await coinCapResponse.json();
             if (coinCapData.data && coinCapData.data.priceUsd) {
-                const price = Math.floor(parseFloat(coinCapData.data.priceUsd));
-                bitcoinPriceHistory.push(price);
-                if (bitcoinPriceHistory.length > 15) {
-                    bitcoinPriceHistory.shift();
-                }
+                const price = parseFloat(coinCapData.data.priceUsd);
                 return price;
             }
         } catch (e) {
@@ -205,6 +239,77 @@ async function fetchBitcoinPrice() {
         console.error('获取比特币价格失败:', error);
         return bitcoinPriceHistory.length > 0 ? bitcoinPriceHistory[bitcoinPriceHistory.length - 1] : 90000;
     }
+}
+
+// 实时更新比特币价格和图表
+async function updateBitcoinPrice() {
+    const price = await fetchBitcoinPrice();
+    
+    // 添加到历史记录
+    bitcoinPriceHistory.push(price);
+    // 保持最近60个数据点（1分钟的数据，每秒更新）
+    if (bitcoinPriceHistory.length > 60) {
+        bitcoinPriceHistory.shift();
+    }
+    
+    // 更新价格显示
+    const bitcoinValueEl = document.getElementById('bitcoinValue');
+    const bitcoinStat = document.getElementById('bitcoinStat');
+    
+    if (bitcoinValueEl) {
+        const currentPrice = parseFloat(bitcoinValueEl.textContent.replace(/[^0-9.]/g, '')) || price;
+        const newPrice = price;
+        
+        // 价格变化指示
+        if (lastBitcoinPrice > 0) {
+            if (newPrice > lastBitcoinPrice) {
+                bitcoinValueEl.style.color = '#00ff88'; // 绿色表示上涨
+            } else if (newPrice < lastBitcoinPrice) {
+                bitcoinValueEl.style.color = '#ff4444'; // 红色表示下跌
+            } else {
+                bitcoinValueEl.style.color = '#ffffff'; // 白色表示无变化
+            }
+        }
+        
+        // 平滑更新价格数字
+        if (typeof gsap !== 'undefined') {
+            gsap.to({ value: currentPrice }, {
+                value: newPrice,
+                duration: 0.5,
+                ease: 'power2.out',
+                onUpdate: function() {
+                    bitcoinValueEl.textContent = `$${Math.floor(this.targets()[0].value).toLocaleString()}`;
+                }
+            });
+        } else {
+            // 如果 GSAP 未加载，直接更新
+            bitcoinValueEl.textContent = `$${Math.floor(price).toLocaleString()}`;
+        }
+    }
+    
+    // 更新统计数字
+    if (bitcoinStat) {
+        bitcoinStat.textContent = `$${Math.floor(price).toLocaleString()}`;
+    }
+    
+    // 实时更新图表
+    if (bitcoinPriceHistory.length > 1) {
+        drawChart('bitcoinChart', bitcoinPriceHistory, '#00ff88');
+    }
+    
+    lastBitcoinPrice = price;
+}
+
+// 启动实时更新
+function startBitcoinPriceUpdates() {
+    // 立即更新一次
+    updateBitcoinPrice();
+    
+    // 每秒更新一次
+    if (priceUpdateInterval) {
+        clearInterval(priceUpdateInterval);
+    }
+    priceUpdateInterval = setInterval(updateBitcoinPrice, 1000);
 }
 
 // 更新访问人数（使用不蒜子，但也可以显示图表）
@@ -232,31 +337,9 @@ function updateVisitorChart() {
 
 // 更新所有仪表板数据
 async function updateDashboard() {
-    // 比特币价格面板
-    const bitcoinPrice = await fetchBitcoinPrice();
-    const bitcoinValueEl = document.getElementById('bitcoinValue');
-    const bitcoinStat = document.getElementById('bitcoinStat');
-
-    if (bitcoinValueEl) {
-        bitcoinValueEl.textContent = `$${bitcoinPrice.toLocaleString()}`;
-    }
-
-    // 更新统计数字
-    if (bitcoinStat) {
-        animateNumber('bitcoinStat', bitcoinPrice, 1500, '$');
-    }
-
-    // 绘制比特币价格趋势图
-    if (bitcoinPriceHistory.length > 0) {
-        drawChart('bitcoinChart', bitcoinPriceHistory, '#00ff88');
-    } else {
-        // 如果没有历史数据，生成一些示例数据
-        const chartData = generateChartData(15, bitcoinPrice - 2000, bitcoinPrice + 2000);
-        drawChart('bitcoinChart', chartData, '#00ff88');
-    }
-
-    // 更新访问人数图表
-    updateVisitorChart();
+    // 比特币价格由实时更新函数处理，这里不需要单独更新
+    // 启动实时更新
+    startBitcoinPriceUpdates();
 }
 
 // GSAP 动画初始化
@@ -439,13 +522,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
 
-    // 初始化仪表板
+    // 初始化仪表板（启动实时比特币价格更新）
     updateDashboard();
-
-    // 每10秒更新一次比特币价格
-    setInterval(() => {
-        updateDashboard();
-    }, 10000);
 
     // 窗口大小改变时重新绘制图表
     let resizeTimer;
