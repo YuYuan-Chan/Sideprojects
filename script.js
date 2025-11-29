@@ -35,7 +35,7 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
     requestAnimationFrame(update);
 }
 
-// 图表绘制函数（优化为折线图，更适合实时数据）
+// 图表绘制函数（蜡烛图/K线图）
 function drawChart(canvasId, data, color = '#ff69b4') {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -51,72 +51,92 @@ function drawChart(canvasId, data, color = '#ff69b4') {
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
+    const padding = 10;
+    const chartHeight = height - padding * 2;
+    const chartWidth = width - padding * 2;
     
     // 绘制蓝色背景
     ctx.fillStyle = '#1e3a8a'; // 深蓝色背景
     ctx.fillRect(0, 0, width, height);
     
-    // 绘制背景网格（更亮的白色，在蓝色背景上更明显）
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    // 绘制背景网格
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
     ctx.lineWidth = 1;
+    
+    // 水平网格线
     for (let i = 0; i <= 4; i++) {
-        const y = (height / 4) * i;
+        const y = padding + (chartHeight / 4) * i;
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
         ctx.stroke();
     }
     
-    // 绘制垂直网格线
+    // 垂直网格线
     for (let i = 0; i <= 4; i++) {
-        const x = (width / 4) * i;
+        const x = padding + (chartWidth / 4) * i;
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
+        ctx.moveTo(x, padding);
+        ctx.lineTo(x, height - padding);
         ctx.stroke();
     }
     
-    // 绘制折线图（粉色）
-    ctx.strokeStyle = '#ff69b4'; // 粉色
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    data.forEach((value, index) => {
-        const x = (width / (data.length - 1)) * index;
-        const normalizedValue = (value - minValue) / range;
-        const y = height - (normalizedValue * (height - 20)) - 10;
+    // 计算蜡烛图数据（OHLC）
+    const candles = [];
+    for (let i = 0; i < data.length; i++) {
+        const currentPrice = data[i];
+        const prevPrice = i > 0 ? data[i - 1] : currentPrice;
         
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-    
-    ctx.stroke();
-    
-    // 填充区域（粉色半透明）
-    ctx.fillStyle = 'rgba(255, 105, 180, 0.3)'; // 粉色半透明
-    ctx.lineTo(width, height - 10);
-    ctx.lineTo(0, height - 10);
-    ctx.closePath();
-    ctx.fill();
-    
-    // 绘制数据点（粉色）
-    ctx.fillStyle = '#ff69b4'; // 粉色
-    data.forEach((value, index) => {
-        const x = (width / (data.length - 1)) * index;
-        const normalizedValue = (value - minValue) / range;
-        const y = height - (normalizedValue * (height - 20)) - 10;
+        // 模拟开高低收数据
+        const open = prevPrice;
+        const close = currentPrice;
+        const high = Math.max(open, close) + Math.abs(close - open) * 0.3;
+        const low = Math.min(open, close) - Math.abs(close - open) * 0.3;
         
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fill();
+        candles.push({ open, high, low, close });
+    }
+    
+    // 绘制蜡烛图
+    const candleWidth = chartWidth / candles.length * 0.8;
+    const candleSpacing = chartWidth / candles.length;
+    
+    candles.forEach((candle, index) => {
+        const x = padding + index * candleSpacing + candleSpacing / 2;
+        const isBullish = candle.close >= candle.open;
         
-        // 添加白色外圈
-        ctx.strokeStyle = '#ffffff';
+        // 计算Y坐标
+        const highY = padding + chartHeight - ((candle.high - minValue) / range) * chartHeight;
+        const lowY = padding + chartHeight - ((candle.low - minValue) / range) * chartHeight;
+        const openY = padding + chartHeight - ((candle.open - minValue) / range) * chartHeight;
+        const closeY = padding + chartHeight - ((candle.close - minValue) / range) * chartHeight;
+        
+        // 绘制上下影线
+        ctx.strokeStyle = isBullish ? '#3b82f6' : '#ff69b4'; // 蓝色上涨，粉色下跌
         ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, highY);
+        ctx.lineTo(x, lowY);
         ctx.stroke();
+        
+        // 绘制蜡烛实体
+        const bodyTop = Math.min(openY, closeY);
+        const bodyBottom = Math.max(openY, closeY);
+        const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
+        
+        if (isBullish) {
+            // 上涨：蓝色实心
+            ctx.fillStyle = '#3b82f6'; // 蓝色
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+        } else {
+            // 下跌：粉色实心
+            ctx.fillStyle = '#ff69b4'; // 粉色
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+        }
+        
+        // 绘制边框
+        ctx.strokeStyle = isBullish ? '#60a5fa' : '#ff8cc8';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
     });
 }
 
