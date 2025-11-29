@@ -218,6 +218,146 @@ body::after {
     background: var(--gradient-2);
 }
 
+/* Portfolio Section - phlntn.com style */
+.portfolio-section {
+    position: relative;
+    z-index: 1;
+    padding: 120px 40px;
+    background: var(--bg-primary);
+}
+
+.portfolio-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.portfolio-header {
+    margin-bottom: 80px;
+    text-align: left;
+}
+
+.portfolio-title {
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -1.5px;
+    color: var(--text-primary);
+}
+
+.portfolio-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.portfolio-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.portfolio-item {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.portfolio-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--gradient-1);
+    opacity: 0.1;
+    transition: width 0.3s ease;
+}
+
+.portfolio-item:hover::before {
+    width: 100%;
+}
+
+.portfolio-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.portfolio-item:hover .portfolio-item-content {
+    padding-left: 20px;
+    border-bottom-color: var(--accent-primary);
+}
+
+.portfolio-item-title {
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    transition: color 0.3s ease;
+}
+
+.portfolio-item:hover .portfolio-item-title {
+    color: var(--accent-primary);
+}
+
+.portfolio-item-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+.portfolio-item:hover .portfolio-item-desc {
+    color: var(--text-primary);
+}
+
+.portfolio-item-arrow {
+    font-size: 32px;
+    color: var(--text-secondary);
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+    font-weight: 300;
+}
+
+.portfolio-item:hover .portfolio-item-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--accent-primary);
+}
+
+.portfolio-item.active {
+    background: var(--gradient-2);
+}
+
+.portfolio-item.active .portfolio-item-content {
+    border-bottom-color: var(--accent-primary);
+    padding-left: 20px;
+}
+
+.portfolio-item.active .portfolio-item-title {
+    color: var(--accent-primary);
+}
+
+.portfolio-item.active .portfolio-item-desc {
+    color: var(--text-primary);
+}
+
+.portfolio-item.active .portfolio-item-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--accent-primary);
+}
 
 /* Stats Section */
 
