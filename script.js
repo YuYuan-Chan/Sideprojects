@@ -2,25 +2,25 @@
 function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suffix = '') {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     const startValue = parseFloat(element.textContent.replace(/[^0-9.]/g, '')) || 0;
     const endValue = parseFloat(targetValue.toString().replace(/[^0-9.]/g, '')) || 0;
     const startTime = performance.now();
-    
+
     function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // 使用缓动函数
         const easeOutQuart = 1 - Math.pow(1 - progress, 4);
         const currentValue = startValue + (endValue - startValue) * easeOutQuart;
-        
+
         if (prefix === '$') {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         } else {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         }
-        
+
         if (progress < 1) {
             requestAnimationFrame(update);
         } else {
@@ -31,7 +31,7 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
             }
         }
     }
-    
+
     requestAnimationFrame(update);
 }
 
@@ -44,34 +44,34 @@ let priceUpdateInterval = null;
 function drawTradingChart() {
     const canvas = document.getElementById('bitcoinChart');
     if (!canvas || !bitcoinPriceHistory.length) return;
-    
+
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     const data = bitcoinPriceHistory;
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
     const basePrice = data[0] || minValue;
-    
+
     const leftPadding = 50;
     const rightPadding = 10;
     const topPadding = 30;
     const bottomPadding = 20;
     const chartWidth = width - leftPadding - rightPadding;
     const chartHeight = height - topPadding - bottomPadding;
-    
+
     // 深色背景
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, width, height);
-    
+
     // 绘制网格
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
-    
+
     // 水平网格
     for (let i = 0; i <= 4; i++) {
         const y = topPadding + (chartHeight / 4) * i;
@@ -80,7 +80,7 @@ function drawTradingChart() {
         ctx.lineTo(width - rightPadding, y);
         ctx.stroke();
     }
-    
+
     // 垂直网格
     const timeLabels = ['08:00', '10:00', '12:00', '14:00', '16:00'];
     for (let i = 0; i < timeLabels.length; i++) {
@@ -89,14 +89,14 @@ function drawTradingChart() {
         ctx.moveTo(x, topPadding);
         ctx.lineTo(x, height - bottomPadding);
         ctx.stroke();
-        
+
         // 时间标签
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.font = '11px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(timeLabels[i], x, height - 5);
     }
-    
+
     // 水平参考线（虚线）
     const midY = topPadding + chartHeight / 2;
     ctx.strokeStyle = 'rgba(135, 206, 250, 0.5)';
@@ -107,62 +107,95 @@ function drawTradingChart() {
     ctx.lineTo(width - rightPadding, midY);
     ctx.stroke();
     ctx.setLineDash([]);
-    
-    // 绘制折线图（蓝色/青色）
-    ctx.strokeStyle = '#00d4ff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    
-    data.forEach((value, index) => {
-        const x = leftPadding + (chartWidth / (data.length - 1)) * index;
-        const normalizedValue = (value - minValue) / range;
-        const y = topPadding + chartHeight - (normalizedValue * chartHeight);
+
+    // 计算K线数据（OHLC）
+    const candles = [];
+    for (let i = 0; i < data.length; i++) {
+        const currentPrice = data[i];
+        const prevPrice = i > 0 ? data[i - 1] : currentPrice;
         
-        if (index === 0) {
-            ctx.moveTo(x, y);
+        // 模拟开高低收数据
+        const open = prevPrice;
+        const close = currentPrice;
+        const high = Math.max(open, close) + Math.abs(close - open) * 0.4;
+        const low = Math.min(open, close) - Math.abs(close - open) * 0.4;
+        
+        candles.push({ open, high, low, close });
+    }
+    
+    // 绘制K线图（蜡烛图）
+    const candleWidth = chartWidth / candles.length * 0.7;
+    const candleSpacing = chartWidth / candles.length;
+    
+    candles.forEach((candle, index) => {
+        const x = leftPadding + index * candleSpacing + candleSpacing / 2;
+        const isBullish = candle.close >= candle.open;
+        
+        // 计算Y坐标
+        const highY = topPadding + chartHeight - ((candle.high - minValue) / range) * chartHeight;
+        const lowY = topPadding + chartHeight - ((candle.low - minValue) / range) * chartHeight;
+        const openY = topPadding + chartHeight - ((candle.open - minValue) / range) * chartHeight;
+        const closeY = topPadding + chartHeight - ((candle.close - minValue) / range) * chartHeight;
+        
+        // 绘制上下影线
+        ctx.strokeStyle = isBullish ? '#3b82f6' : '#ff69b4'; // 蓝色上涨，粉色下跌
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, highY);
+        ctx.lineTo(x, lowY);
+        ctx.stroke();
+        
+        // 绘制蜡烛实体
+        const bodyTop = Math.min(openY, closeY);
+        const bodyBottom = Math.max(openY, closeY);
+        const bodyHeight = Math.max(bodyBottom - bodyTop, 2);
+        
+        if (isBullish) {
+            // 上涨：蓝色实心
+            ctx.fillStyle = '#3b82f6'; // 蓝色
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+            ctx.strokeStyle = '#60a5fa';
         } else {
-            ctx.lineTo(x, y);
+            // 下跌：粉色实心
+            ctx.fillStyle = '#ff69b4'; // 粉色
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+            ctx.strokeStyle = '#ff8cc8';
         }
+        
+        // 绘制边框
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
     });
-    
-    ctx.stroke();
-    
-    // 填充区域
-    ctx.fillStyle = 'rgba(0, 212, 255, 0.1)';
-    ctx.lineTo(width - rightPadding, topPadding + chartHeight);
-    ctx.lineTo(leftPadding, topPadding + chartHeight);
-    ctx.closePath();
-    ctx.fill();
-    
+
     // 价格标注
     ctx.font = '11px Arial';
     ctx.textAlign = 'left';
-    
+
     const significantPoints = [];
     for (let i = 1; i < data.length - 1; i++) {
         const prev = data[i - 1];
         const curr = data[i];
         const next = data[i + 1];
-        
+
         if ((curr > prev && curr > next) || (curr < prev && curr < next)) {
             significantPoints.push({ index: i, price: curr });
         }
     }
-    
+
     // 限制标注数量
     const step = Math.max(1, Math.floor(significantPoints.length / 15));
     significantPoints.forEach((point, idx) => {
         if (idx % step !== 0 && significantPoints.length > 15) return;
-        
+
         const x = leftPadding + (chartWidth / (data.length - 1)) * point.index;
         const normalizedValue = (point.price - minValue) / range;
         const y = topPadding + chartHeight - (normalizedValue * chartHeight);
-        
+
         const percentChange = ((point.price - basePrice) / basePrice) * 100;
-        const percentText = percentChange >= 0 
-            ? `+${percentChange.toFixed(1)}%` 
-            : `${percentChange.toFixed(1)}%`;
-        
+        const percentText = percentChange >= 0 ?
+            `+${percentChange.toFixed(1)}%` :
+            `${percentChange.toFixed(1)}%`;
+
         // 标注线
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 1;
@@ -170,13 +203,13 @@ function drawTradingChart() {
         ctx.moveTo(x, y);
         ctx.lineTo(x + 25, y - 12);
         ctx.stroke();
-        
+
         // 标注文本
         ctx.fillStyle = '#ffffff';
         const priceText = basePrice.toFixed(1);
         ctx.fillText(`${priceText} (${percentText})`, x + 30, y - 12);
     });
-    
+
     // 右侧价格刻度
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.font = '11px Arial';
@@ -186,7 +219,7 @@ function drawTradingChart() {
         const y = topPadding + (chartHeight / 4) * i;
         ctx.fillText(price.toFixed(1), width - 5, y + 4);
     }
-    
+
     // 更新价格信息
     if (data.length > 0) {
         const open = data[0];
@@ -195,12 +228,12 @@ function drawTradingChart() {
         const low = minValue;
         const change = close - open;
         const changePercent = ((change / open) * 100);
-        
+
         document.getElementById('chartOpen').textContent = open.toFixed(2);
         document.getElementById('chartHigh').textContent = high.toFixed(2);
         document.getElementById('chartLow').textContent = low.toFixed(2);
         document.getElementById('chartClose').textContent = close.toFixed(2);
-        
+
         const changeEl = document.getElementById('chartChange');
         const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
         changeEl.textContent = changeText;
@@ -212,23 +245,23 @@ function drawTradingChart() {
 function drawVolumeChart() {
     const canvas = document.getElementById('volumeChart');
     if (!canvas || !bitcoinVolumes.length) return;
-    
+
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     const volumes = bitcoinVolumes;
     const maxVolume = Math.max(...volumes) || 1;
     const leftPadding = 50;
     const rightPadding = 10;
-    
+
     volumes.forEach((volume, index) => {
         const x = leftPadding + ((width - leftPadding - rightPadding) / volumes.length) * index;
         const barWidth = (width - leftPadding - rightPadding) / volumes.length * 0.8;
         const barHeight = (volume / maxVolume) * height;
-        
+
         // 根据价格变化决定颜色（简化：随机或基于趋势）
         const isUp = index > 0 && bitcoinPriceHistory[index] >= bitcoinPriceHistory[index - 1];
         ctx.fillStyle = isUp ? '#00ff88' : '#ff69b4';
@@ -240,36 +273,36 @@ function drawVolumeChart() {
 function drawVPVR() {
     const canvas = document.getElementById('vpvrChart');
     if (!canvas || !bitcoinPriceHistory.length || !bitcoinVolumes.length) return;
-    
+
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     // 计算价格区间的成交量
     const priceLevels = 20;
     const maxPrice = Math.max(...bitcoinPriceHistory);
     const minPrice = Math.min(...bitcoinPriceHistory);
     const priceRange = maxPrice - minPrice || 1;
-    
+
     const volumeByPrice = new Array(priceLevels).fill(0);
-    
+
     bitcoinPriceHistory.forEach((price, index) => {
         const level = Math.floor(((price - minPrice) / priceRange) * (priceLevels - 1));
         if (level >= 0 && level < priceLevels) {
             volumeByPrice[level] += bitcoinVolumes[index] || 0;
         }
     });
-    
+
     const maxVolume = Math.max(...volumeByPrice) || 1;
     const barWidth = width * 0.6;
-    
+
     volumeByPrice.forEach((volume, level) => {
         const y = (height / priceLevels) * level;
         const barHeight = height / priceLevels;
         const barLength = (volume / maxVolume) * width;
-        
+
         // 绿色表示买入，红色表示卖出（简化处理）
         ctx.fillStyle = level < priceLevels / 2 ? '#00ff88' : '#ff69b4';
         ctx.fillRect(width - barLength, y, barLength, barHeight);
@@ -336,29 +369,29 @@ async function fetchBitcoinPrice() {
 // 实时更新比特币价格和图表
 async function updateBitcoinPrice() {
     const price = await fetchBitcoinPrice();
-    
+
     // 添加到历史记录
     bitcoinPriceHistory.push(price);
     // 保持最近60个数据点（1分钟的数据，每秒更新）
     if (bitcoinPriceHistory.length > 60) {
         bitcoinPriceHistory.shift();
     }
-    
+
     // 模拟成交量（实际应该从API获取）
     const volume = Math.random() * 1000000 + 500000;
     bitcoinVolumes.push(volume);
     if (bitcoinVolumes.length > 60) {
         bitcoinVolumes.shift();
     }
-    
+
     // 更新价格显示
     const bitcoinValueEl = document.getElementById('bitcoinValue');
     const bitcoinStat = document.getElementById('bitcoinStat');
-    
+
     if (bitcoinValueEl) {
         const currentPrice = parseFloat(bitcoinValueEl.textContent.replace(/[^0-9.]/g, '')) || price;
         const newPrice = price;
-        
+
         // 价格变化指示
         if (lastBitcoinPrice > 0) {
             if (newPrice > lastBitcoinPrice) {
@@ -369,7 +402,7 @@ async function updateBitcoinPrice() {
                 bitcoinValueEl.style.color = '#ffffff'; // 白色表示无变化
             }
         }
-        
+
         // 平滑更新价格数字
         if (typeof gsap !== 'undefined') {
             gsap.to({ value: currentPrice }, {
@@ -385,17 +418,17 @@ async function updateBitcoinPrice() {
             bitcoinValueEl.textContent = `$${Math.floor(price).toLocaleString()}`;
         }
     }
-    
+
     // 更新统计数字
     if (bitcoinStat) {
         bitcoinStat.textContent = `$${Math.floor(price).toLocaleString()}`;
     }
-    
+
     // 实时更新所有图表
     drawTradingChart();
     drawVolumeChart();
     drawVPVR();
-    
+
     lastBitcoinPrice = price;
 }
 
@@ -403,7 +436,7 @@ async function updateBitcoinPrice() {
 function startBitcoinPriceUpdates() {
     // 立即更新一次
     updateBitcoinPrice();
-    
+
     // 每秒更新一次
     if (priceUpdateInterval) {
         clearInterval(priceUpdateInterval);
@@ -424,10 +457,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof gsap !== 'undefined') {
         initGSAPAnimations();
     }
-    
+
     // 初始化仪表板（启动实时比特币价格更新）
     updateDashboard();
-    
+
     // 窗口大小改变时重新绘制图表
     let resizeTimer;
     window.addEventListener('resize', () => {
@@ -438,10 +471,10 @@ document.addEventListener('DOMContentLoaded', function() {
             drawVPVR();
         }, 200);
     });
-    
+
     // 为所有工具卡片添加点击效果
     const toolCards = document.querySelectorAll('.tool-card');
-    
+
     toolCards.forEach(card => {
         card.addEventListener('click', function() {
             this.style.transform = 'scale(0.98)';
@@ -466,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalText = mainTitle.textContent;
         mainTitle.textContent = '';
         let i = 0;
-        
+
         function typeWriter() {
             if (i < originalText.length) {
                 mainTitle.textContent += originalText.charAt(i);
@@ -474,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(typeWriter, 50);
             }
         }
-        
+
         setTimeout(typeWriter, 500);
     }
 
@@ -497,12 +530,12 @@ function initGSAPAnimations() {
         console.warn('GSAP not loaded');
         return;
     }
-    
+
     // 注册 ScrollTrigger 插件
     if (typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
     }
-    
+
     // Hero 标题动画
     gsap.from('.hero-title', {
         scrollTrigger: {
@@ -515,7 +548,7 @@ function initGSAPAnimations() {
         duration: 1.2,
         ease: 'power3.out'
     });
-    
+
     // Hero 按钮动画
     gsap.from('.hero-buttons', {
         scrollTrigger: {
@@ -528,7 +561,7 @@ function initGSAPAnimations() {
         duration: 1,
         ease: 'power3.out'
     });
-    
+
     // Portfolio 标题动画
     gsap.from('.portfolio-title', {
         scrollTrigger: {
@@ -541,7 +574,7 @@ function initGSAPAnimations() {
         duration: 1,
         ease: 'power3.out'
     });
-    
+
     // Portfolio 项目动画
     gsap.utils.toArray('.portfolio-item').forEach((item, index) => {
         gsap.from(item, {
@@ -557,7 +590,7 @@ function initGSAPAnimations() {
             delay: index * 0.1
         });
     });
-    
+
     // Stats 卡片动画
     gsap.utils.toArray('.stat-card').forEach((card, index) => {
         gsap.from(card, {
@@ -573,7 +606,7 @@ function initGSAPAnimations() {
             delay: index * 0.15
         });
     });
-    
+
     // Dashboard 卡片动画
     gsap.utils.toArray('.dashboard-card').forEach((card, index) => {
         gsap.from(card, {
@@ -589,13 +622,13 @@ function initGSAPAnimations() {
             delay: index * 0.1
         });
     });
-    
+
     // 项目卡片悬停动画增强
     document.querySelectorAll('.portfolio-item').forEach(item => {
         const title = item.querySelector('.portfolio-item-title');
         const desc = item.querySelector('.portfolio-item-desc');
         const arrow = item.querySelector('.portfolio-item-arrow');
-        
+
         item.addEventListener('mouseenter', () => {
             gsap.to(title, {
                 x: 10,
@@ -615,7 +648,7 @@ function initGSAPAnimations() {
                 ease: 'power2.out'
             });
         });
-        
+
         item.addEventListener('mouseleave', () => {
             gsap.to(title, {
                 x: 0,
@@ -636,10 +669,10 @@ function initGSAPAnimations() {
             });
         });
     });
-    
+
     // 平滑滚动
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+        anchor.addEventListener('click', function(e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target && typeof gsap !== 'undefined') {
