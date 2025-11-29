@@ -93,19 +93,9 @@
     <section class="stats-section">
         <div class="stats-container">
             <div class="stat-card">
-                <div class="stat-number" id="musicStat">0</div>
-                <div class="stat-label">Songs</div>
-                <div class="stat-unit">Apple Music</div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-number" id="bitcoinStat">$0</div>
                 <div class="stat-label">Bitcoin Price</div>
                 <div class="stat-unit">USD</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="visitorStat">0</div>
-                <div class="stat-label">Visitors</div>
-                <div class="stat-unit">Total Views</div>
             </div>
         </div>
     </section>
@@ -118,31 +108,6 @@
         </div>
 
         <div class="dashboard-grid">
-            <!-- Music Panel -->
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h3 class="card-title">MUSIC</h3>
-                    <span class="info-icon">ℹ</span>
-                </div>
-                <div class="card-content">
-                    <div id="appleMusicPlayer" class="apple-music-container">
-                        <iframe id="appleMusicFrame" allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                            src=""></iframe>
-                        <div class="music-placeholder" id="musicPlaceholder">
-                            <p>Connect Your Apple Music</p>
-                            <input type="text" id="appleMusicUrl" placeholder="Paste Apple Music link here" class="music-input">
-                            <button onclick="setAppleMusic()" class="music-btn">Connect</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <div class="card-value">
-                        <span class="value-number" id="musicValue">0</span>
-                        <span class="value-unit">songs</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Bitcoin Panel -->
             <div class="dashboard-card">
                 <div class="card-header">
@@ -156,25 +121,6 @@
                     <div class="card-value">
                         <span class="value-number" id="bitcoinValue">$0</span>
                         <span class="value-unit">USD</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Visitors Panel -->
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h3 class="card-title">VISITORS</h3>
-                    <span class="info-icon">ℹ</span>
-                </div>
-                <div class="card-content">
-                    <canvas id="visitorChart" class="mini-chart"></canvas>
-                </div>
-                <div class="card-footer">
-                    <div class="card-value">
-                        <span class="value-number">
-                            <span id="busuanzi_value_site_pv">0</span>
-                        </span>
-                        <span class="value-unit">views</span>
                     </div>
                 </div>
             </div>
