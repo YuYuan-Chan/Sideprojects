@@ -127,6 +127,91 @@ body::after {
 
 /* Hero Section */
 
+/* Welcome Section */
+.welcome-section {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.welcome-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 300px;
+    padding: 150px 0;
+    min-height: 300vh;
+}
+
+.welcome-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    opacity: 0;
+    transform: translateY(100px) scale(0.8);
+}
+
+.welcome-icon {
+    font-size: clamp(100px, 18vw, 250px);
+    margin-bottom: 50px;
+    filter: drop-shadow(0 10px 30px rgba(0, 255, 136, 0.3));
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
+}
+
+.welcome-text {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(40px, 7vw, 90px);
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    text-align: center;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 300;
+    opacity: 0.6;
+    animation: bounce 2s infinite;
+}
+
+.scroll-arrow {
+    font-size: 24px;
+    color: var(--accent-primary);
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
 .hero-section {
     position: relative;
     min-height: 100vh;
@@ -145,11 +230,11 @@ body::after {
 
 .hero-title {
     font-family: 'Anton', sans-serif;
-    font-size: clamp(64px, 12vw, 180px);
+    font-size: clamp(36px, 6vw, 80px);
     font-weight: 400;
-    line-height: 0.9;
+    line-height: 1.1;
     margin-bottom: 60px;
-    letter-spacing: -3px;
+    letter-spacing: -1px;
     text-transform: uppercase;
 }
 
