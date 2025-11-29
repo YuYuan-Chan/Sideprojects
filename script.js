@@ -1,28 +1,65 @@
+// 数字动画函数
+function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suffix = '') {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const startValue = parseFloat(element.textContent.replace(/[^0-9.]/g, '')) || 0;
+    const endValue = parseFloat(targetValue.toString().replace(/[^0-9.]/g, '')) || 0;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // 使用缓动函数
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const currentValue = startValue + (endValue - startValue) * easeOutQuart;
+        
+        if (prefix === '$') {
+            element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
+        } else {
+            element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            if (prefix === '$') {
+                element.textContent = prefix + Math.floor(endValue).toLocaleString() + suffix;
+            } else {
+                element.textContent = prefix + Math.floor(endValue).toLocaleString() + suffix;
+            }
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
 // 图表绘制函数
-function drawChart(canvasId, data, color = '#9b59b6') {
+function drawChart(canvasId, data, color = '#00ff88') {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
     const height = canvas.height = canvas.offsetHeight;
-    
+
     ctx.clearRect(0, 0, width, height);
-    
+
     if (!data || data.length === 0) return;
-    
+
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
-    
+
     const barWidth = width / data.length;
     const padding = 2;
-    
+
     data.forEach((value, index) => {
         const barHeight = ((value - minValue) / range) * (height - 10);
         const x = index * barWidth;
         const y = height - barHeight - 5;
-        
+
         ctx.fillStyle = color;
         ctx.fillRect(x + padding, y, barWidth - padding * 2, barHeight);
     });
@@ -30,7 +67,7 @@ function drawChart(canvasId, data, color = '#9b59b6') {
 
 // 生成随机数据用于图表
 function generateChartData(count = 15, min = 0, max = 100) {
-    return Array.from({ length: count }, () => 
+    return Array.from({ length: count }, () =>
         Math.floor(Math.random() * (max - min + 1)) + min
     );
 }
@@ -41,30 +78,30 @@ function setAppleMusic() {
     const iframe = document.getElementById('appleMusicFrame');
     const placeholder = document.getElementById('musicPlaceholder');
     const musicValue = document.getElementById('musicValue');
-    
+
     if (!urlInput || !iframe) return;
-    
+
     let musicUrl = urlInput.value.trim();
-    
+
     // 如果没有输入，尝试从 localStorage 读取
     if (!musicUrl) {
         musicUrl = localStorage.getItem('appleMusicUrl');
     }
-    
+
     if (!musicUrl) {
         alert('请输入 Apple Music 链接');
         return;
     }
-    
+
     // 转换 Apple Music 链接为嵌入格式
     // 如果用户输入的是 music.apple.com 链接，转换为 embed.music.apple.com
     if (musicUrl.includes('music.apple.com') && !musicUrl.includes('embed.music.apple.com')) {
         musicUrl = musicUrl.replace('music.apple.com', 'embed.music.apple.com');
     }
-    
+
     // 保存到 localStorage
     localStorage.setItem('appleMusicUrl', musicUrl);
-    
+
     // 设置 iframe
     iframe.src = musicUrl;
     iframe.style.display = 'block';
@@ -73,6 +110,12 @@ function setAppleMusic() {
     // 更新显示
     if (musicValue) {
         musicValue.textContent = 'Playing';
+    }
+    
+    // 更新统计数字（模拟歌曲数量）
+    const musicStat = document.getElementById('musicStat');
+    if (musicStat) {
+        animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
     }
     
     // 尝试获取播放列表中的歌曲数量（需要用户授权）
@@ -89,7 +132,7 @@ function initAppleMusic() {
     const savedUrl = localStorage.getItem('appleMusicUrl');
     const iframe = document.getElementById('appleMusicFrame');
     const placeholder = document.getElementById('musicPlaceholder');
-    
+
     if (savedUrl && iframe) {
         iframe.src = savedUrl;
         iframe.style.display = 'block';
@@ -120,7 +163,7 @@ async function fetchBitcoinPrice() {
         } catch (e) {
             console.log('CoinGecko API 失败，尝试备用方案');
         }
-        
+
         // 方法2: Binance API
         try {
             const binanceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
@@ -136,7 +179,7 @@ async function fetchBitcoinPrice() {
         } catch (e) {
             console.log('Binance API 失败');
         }
-        
+
         // 方法3: CoinCap API
         try {
             const coinCapResponse = await fetch('https://api.coincap.io/v2/assets/bitcoin');
@@ -152,7 +195,7 @@ async function fetchBitcoinPrice() {
         } catch (e) {
             console.log('CoinCap API 失败');
         }
-        
+
         // 如果所有 API 都失败，使用历史数据或默认值
         if (bitcoinPriceHistory.length > 0) {
             return bitcoinPriceHistory[bitcoinPriceHistory.length - 1];
@@ -171,13 +214,18 @@ function updateVisitorChart() {
         const visitorCountEl = document.getElementById('busuanzi_value_site_pv');
         if (visitorCountEl) {
             const count = parseInt(visitorCountEl.textContent) || 0;
+            // 更新统计数字
+            const visitorStat = document.getElementById('visitorStat');
+            if (visitorStat && count > 0) {
+                animateNumber('visitorStat', count);
+            }
             // 生成基于实际访问量的图表数据
             const chartData = generateChartData(15, Math.max(0, count - 100), count + 100);
-            drawChart('visitorChart', chartData, '#9b59b6');
+            drawChart('visitorChart', chartData, '#00ff88');
         } else {
             // 如果不蒜子还没加载，使用默认数据
             const chartData = generateChartData(15, 0, 100);
-            drawChart('visitorChart', chartData, '#9b59b6');
+            drawChart('visitorChart', chartData, '#00ff88');
         }
     }, 2000);
 }
@@ -187,17 +235,24 @@ async function updateDashboard() {
     // 比特币价格面板
     const bitcoinPrice = await fetchBitcoinPrice();
     const bitcoinValueEl = document.getElementById('bitcoinValue');
+    const bitcoinStat = document.getElementById('bitcoinStat');
+    
     if (bitcoinValueEl) {
         bitcoinValueEl.textContent = `$${bitcoinPrice.toLocaleString()}`;
     }
     
+    // 更新统计数字
+    if (bitcoinStat) {
+        animateNumber('bitcoinStat', bitcoinPrice, 1500, '$');
+    }
+    
     // 绘制比特币价格趋势图
     if (bitcoinPriceHistory.length > 0) {
-        drawChart('bitcoinChart', bitcoinPriceHistory, '#9b59b6');
+        drawChart('bitcoinChart', bitcoinPriceHistory, '#00ff88');
     } else {
         // 如果没有历史数据，生成一些示例数据
         const chartData = generateChartData(15, bitcoinPrice - 2000, bitcoinPrice + 2000);
-        drawChart('bitcoinChart', chartData, '#9b59b6');
+        drawChart('bitcoinChart', chartData, '#00ff88');
     }
     
     // 更新访问人数图表
@@ -209,6 +264,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化 Apple Music
     initAppleMusic();
     
+    // 初始化统计数字动画
+    setTimeout(() => {
+        const musicStat = document.getElementById('musicStat');
+        if (musicStat && musicStat.textContent === '0') {
+            animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
+        }
+    }, 500);
+    
     // 初始化仪表板
     updateDashboard();
     
@@ -216,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(() => {
         updateDashboard();
     }, 10000);
-    
+
     // 窗口大小改变时重新绘制图表
     let resizeTimer;
     window.addEventListener('resize', () => {
@@ -225,10 +288,10 @@ document.addEventListener('DOMContentLoaded', function() {
             updateDashboard();
         }, 200);
     });
-    
+
     // 为所有工具卡片添加点击效果
     const toolCards = document.querySelectorAll('.tool-card');
-    
+
     toolCards.forEach(card => {
         card.addEventListener('click', function() {
             this.style.transform = 'scale(0.98)';
@@ -253,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalText = mainTitle.textContent;
         mainTitle.textContent = '';
         let i = 0;
-        
+
         function typeWriter() {
             if (i < originalText.length) {
                 mainTitle.textContent += originalText.charAt(i);
@@ -261,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(typeWriter, 50);
             }
         }
-        
+
         setTimeout(typeWriter, 500);
     }
 
