@@ -259,8 +259,171 @@ async function updateDashboard() {
     updateVisitorChart();
 }
 
+// GSAP 动画初始化
+function initGSAPAnimations() {
+    // 检查 GSAP 是否加载
+    if (typeof gsap === 'undefined') {
+        console.warn('GSAP not loaded');
+        return;
+    }
+    
+    // 注册 ScrollTrigger 插件
+    if (typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+    }
+    
+    // Hero 标题动画
+    gsap.from('.hero-title', {
+        opacity: 0,
+        y: 100,
+        duration: 1.2,
+        ease: 'power3.out',
+        delay: 0.2
+    });
+    
+    // Hero 按钮动画
+    gsap.from('.hero-buttons', {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        ease: 'power3.out',
+        delay: 0.8
+    });
+    
+    // Portfolio 标题动画
+    gsap.from('.portfolio-title', {
+        scrollTrigger: {
+            trigger: '.portfolio-section',
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 80,
+        duration: 1,
+        ease: 'power3.out'
+    });
+    
+    // Portfolio 项目动画
+    gsap.utils.toArray('.portfolio-item').forEach((item, index) => {
+        gsap.from(item, {
+            scrollTrigger: {
+                trigger: item,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            x: -100,
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * 0.1
+        });
+    });
+    
+    // Stats 卡片动画
+    gsap.utils.toArray('.stat-card').forEach((card, index) => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.8,
+            ease: 'back.out(1.7)',
+            delay: index * 0.15
+        });
+    });
+    
+    // Dashboard 卡片动画
+    gsap.utils.toArray('.dashboard-card').forEach((card, index) => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * 0.1
+        });
+    });
+    
+    // 项目卡片悬停动画增强
+    document.querySelectorAll('.portfolio-item').forEach(item => {
+        const title = item.querySelector('.portfolio-item-title');
+        const desc = item.querySelector('.portfolio-item-desc');
+        const arrow = item.querySelector('.portfolio-item-arrow');
+        
+        item.addEventListener('mouseenter', () => {
+            gsap.to(title, {
+                x: 10,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(desc, {
+                x: 10,
+                opacity: 1,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(arrow, {
+                x: 0,
+                opacity: 1,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            gsap.to(title, {
+                x: 0,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(desc, {
+                x: 0,
+                opacity: 0.7,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(arrow, {
+                x: -30,
+                opacity: 0,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+        });
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target && typeof gsap !== 'undefined') {
+                gsap.to(window, {
+                    duration: 1.5,
+                    scrollTo: {
+                        y: target,
+                        offsetY: 80
+                    },
+                    ease: 'power3.inOut'
+                });
+            }
+        });
+    });
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
+    // 初始化 GSAP 动画
+    if (typeof gsap !== 'undefined') {
+        initGSAPAnimations();
+    }
+    
     // 初始化 Apple Music
     initAppleMusic();
 
