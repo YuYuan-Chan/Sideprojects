@@ -36,7 +36,7 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
 }
 
 // 图表绘制函数（优化为折线图，更适合实时数据）
-function drawChart(canvasId, data, color = '#00ff88') {
+function drawChart(canvasId, data, color = '#ff69b4') {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     
@@ -52,8 +52,12 @@ function drawChart(canvasId, data, color = '#00ff88') {
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
     
-    // 绘制背景网格
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    // 绘制蓝色背景
+    ctx.fillStyle = '#1e3a8a'; // 深蓝色背景
+    ctx.fillRect(0, 0, width, height);
+    
+    // 绘制背景网格（更亮的白色，在蓝色背景上更明显）
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
         const y = (height / 4) * i;
@@ -63,9 +67,18 @@ function drawChart(canvasId, data, color = '#00ff88') {
         ctx.stroke();
     }
     
-    // 绘制折线图
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    // 绘制垂直网格线
+    for (let i = 0; i <= 4; i++) {
+        const x = (width / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+    }
+    
+    // 绘制折线图（粉色）
+    ctx.strokeStyle = '#ff69b4'; // 粉色
+    ctx.lineWidth = 3;
     ctx.beginPath();
     
     data.forEach((value, index) => {
@@ -82,23 +95,28 @@ function drawChart(canvasId, data, color = '#00ff88') {
     
     ctx.stroke();
     
-    // 填充区域
-    ctx.fillStyle = color + '20';
+    // 填充区域（粉色半透明）
+    ctx.fillStyle = 'rgba(255, 105, 180, 0.3)'; // 粉色半透明
     ctx.lineTo(width, height - 10);
     ctx.lineTo(0, height - 10);
     ctx.closePath();
     ctx.fill();
     
-    // 绘制数据点
-    ctx.fillStyle = color;
+    // 绘制数据点（粉色）
+    ctx.fillStyle = '#ff69b4'; // 粉色
     data.forEach((value, index) => {
         const x = (width / (data.length - 1)) * index;
         const normalizedValue = (value - minValue) / range;
         const y = height - (normalizedValue * (height - 20)) - 10;
         
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
+        
+        // 添加白色外圈
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     });
 }
 
@@ -244,22 +262,22 @@ async function fetchBitcoinPrice() {
 // 实时更新比特币价格和图表
 async function updateBitcoinPrice() {
     const price = await fetchBitcoinPrice();
-    
+
     // 添加到历史记录
     bitcoinPriceHistory.push(price);
     // 保持最近60个数据点（1分钟的数据，每秒更新）
     if (bitcoinPriceHistory.length > 60) {
         bitcoinPriceHistory.shift();
     }
-    
+
     // 更新价格显示
     const bitcoinValueEl = document.getElementById('bitcoinValue');
     const bitcoinStat = document.getElementById('bitcoinStat');
-    
+
     if (bitcoinValueEl) {
         const currentPrice = parseFloat(bitcoinValueEl.textContent.replace(/[^0-9.]/g, '')) || price;
         const newPrice = price;
-        
+
         // 价格变化指示
         if (lastBitcoinPrice > 0) {
             if (newPrice > lastBitcoinPrice) {
@@ -270,7 +288,7 @@ async function updateBitcoinPrice() {
                 bitcoinValueEl.style.color = '#ffffff'; // 白色表示无变化
             }
         }
-        
+
         // 平滑更新价格数字
         if (typeof gsap !== 'undefined') {
             gsap.to({ value: currentPrice }, {
@@ -286,17 +304,17 @@ async function updateBitcoinPrice() {
             bitcoinValueEl.textContent = `$${Math.floor(price).toLocaleString()}`;
         }
     }
-    
+
     // 更新统计数字
     if (bitcoinStat) {
         bitcoinStat.textContent = `$${Math.floor(price).toLocaleString()}`;
     }
-    
-    // 实时更新图表
+
+    // 实时更新图表（粉色线条）
     if (bitcoinPriceHistory.length > 1) {
-        drawChart('bitcoinChart', bitcoinPriceHistory, '#00ff88');
+        drawChart('bitcoinChart', bitcoinPriceHistory, '#ff69b4');
     }
-    
+
     lastBitcoinPrice = price;
 }
 
@@ -304,7 +322,7 @@ async function updateBitcoinPrice() {
 function startBitcoinPriceUpdates() {
     // 立即更新一次
     updateBitcoinPrice();
-    
+
     // 每秒更新一次
     if (priceUpdateInterval) {
         clearInterval(priceUpdateInterval);
