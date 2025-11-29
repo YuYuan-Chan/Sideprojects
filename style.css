@@ -218,12 +218,15 @@ body::after {
     background: var(--gradient-2);
 }
 
+
 /* Portfolio Section - phlntn.com style */
+
 .portfolio-section {
     position: relative;
     z-index: 1;
     padding: 120px 40px;
     background: var(--bg-primary);
+    min-height: 400px;
 }
 
 .portfolio-container {
@@ -290,6 +293,7 @@ body::after {
     transition: all 0.3s ease;
     position: relative;
     z-index: 1;
+    width: 100%;
 }
 
 .portfolio-item:hover .portfolio-item-content {
@@ -358,6 +362,7 @@ body::after {
     transform: translateX(0);
     color: var(--accent-primary);
 }
+
 
 /* Stats Section */
 

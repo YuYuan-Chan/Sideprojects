@@ -294,16 +294,16 @@ document.addEventListener('DOMContentLoaded', function() {
     portfolioItems.forEach(item => {
         item.addEventListener('click', function() {
             const projectId = this.getAttribute('data-project');
-            
+
             // 移除所有活动状态
             portfolioItems.forEach(i => i.classList.remove('active'));
-            
+
             // 添加活动状态
             this.classList.add('active');
-            
+
             // 可以在这里添加项目详情显示逻辑
             console.log('Selected project:', projectId);
-            
+
             // 平滑滚动到项目详情区域（如果有）
             // 或者显示项目详情模态框
         });
