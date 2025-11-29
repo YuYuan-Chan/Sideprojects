@@ -262,56 +262,78 @@ async function updateDashboard() {
 // 欢迎界面滚动动画
 function initWelcomeAnimations() {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+        // 如果 GSAP 未加载，使用 CSS 动画
+        const welcomeItems = document.querySelectorAll('.welcome-item');
+        welcomeItems.forEach((item, index) => {
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0) scale(1)';
+        });
         return;
     }
     
     const welcomeItems = document.querySelectorAll('.welcome-item');
     
+    // 初始状态：第一个元素可见，其他隐藏
     welcomeItems.forEach((item, index) => {
-        gsap.from(item, {
+        if (index === 0) {
+            gsap.set(item, { opacity: 1, y: 0, scale: 1 });
+        } else {
+            gsap.set(item, { opacity: 0, y: 100, scale: 0.8 });
+        }
+    });
+    
+    welcomeItems.forEach((item, index) => {
+        // 元素淡入动画
+        gsap.to(item, {
             scrollTrigger: {
                 trigger: item,
-                start: 'top 80%',
-                end: 'top 20%',
-                toggleActions: 'play none none reverse',
-                scrub: 1
+                start: 'top 70%',
+                end: 'top 30%',
+                toggleActions: 'play none none none',
+                once: true
             },
-            opacity: 0,
-            y: 150,
-            scale: 0.8,
+            opacity: 1,
+            y: 0,
+            scale: 1,
             duration: 1,
             ease: 'power3.out'
         });
         
         // 图标动画
         const icon = item.querySelector('.welcome-icon');
-        gsap.from(icon, {
-            scrollTrigger: {
-                trigger: item,
-                start: 'top 80%',
-                toggleActions: 'play none none none'
-            },
-            scale: 0.5,
-            rotation: -180,
-            duration: 1.2,
-            ease: 'back.out(1.7)',
-            delay: index * 0.2
-        });
+        if (icon) {
+            gsap.from(icon, {
+                scrollTrigger: {
+                    trigger: item,
+                    start: 'top 70%',
+                    toggleActions: 'play none none none',
+                    once: true
+                },
+                scale: 0.3,
+                rotation: -360,
+                duration: 1.5,
+                ease: 'back.out(1.7)',
+                delay: 0.2
+            });
+        }
         
         // 文字动画
         const text = item.querySelector('.welcome-text');
-        gsap.from(text, {
-            scrollTrigger: {
-                trigger: item,
-                start: 'top 80%',
-                toggleActions: 'play none none none'
-            },
-            opacity: 0,
-            x: -100,
-            duration: 1,
-            ease: 'power3.out',
-            delay: index * 0.2 + 0.3
-        });
+        if (text) {
+            gsap.from(text, {
+                scrollTrigger: {
+                    trigger: item,
+                    start: 'top 70%',
+                    toggleActions: 'play none none none',
+                    once: true
+                },
+                opacity: 0,
+                x: -150,
+                duration: 1,
+                ease: 'power3.out',
+                delay: 0.4
+            });
+        }
     });
     
     // 滚动指示器淡出
@@ -337,15 +359,15 @@ function initGSAPAnimations() {
         console.warn('GSAP not loaded');
         return;
     }
-    
+
     // 注册 ScrollTrigger 插件
     if (typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
     }
-    
+
     // 初始化欢迎界面动画
     initWelcomeAnimations();
-    
+
     // Hero 标题动画
     gsap.from('.hero-title', {
         scrollTrigger: {
