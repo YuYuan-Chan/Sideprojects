@@ -109,15 +109,27 @@
 
         <div class="dashboard-grid">
             <!-- Bitcoin Panel -->
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h3 class="card-title">BITCOIN PRICE</h3>
-                    <span class="info-icon">ℹ</span>
+            <div class="dashboard-card trading-chart-card">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <span class="chart-exchange">BINANCE.F</span>
+                        <span class="chart-pair">BTCUSDT</span>
+                        <span class="chart-timeframe">1m</span>
+                    </div>
+                    <div class="chart-price-info">
+                        <span>O: <span id="chartOpen">0</span></span>
+                        <span>H: <span id="chartHigh">0</span></span>
+                        <span>L: <span id="chartLow">0</span></span>
+                        <span>C: <span id="chartClose">0</span></span>
+                        <span class="price-change" id="chartChange">+0.00 (+0.00%)</span>
+                    </div>
                 </div>
-                <div class="card-content">
-                    <canvas id="bitcoinChart" class="mini-chart"></canvas>
+                <div class="chart-container">
+                    <canvas id="bitcoinChart" class="trading-chart"></canvas>
+                    <canvas id="volumeChart" class="volume-chart"></canvas>
+                    <canvas id="vpvrChart" class="vpvr-chart"></canvas>
                 </div>
-                <div class="card-footer">
+                <div class="chart-footer">
                     <div class="card-value">
                         <span class="value-number" id="bitcoinValue">$0</span>
                         <span class="value-unit">USD</span>

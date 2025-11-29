@@ -2,25 +2,25 @@
 function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suffix = '') {
     const element = document.getElementById(elementId);
     if (!element) return;
-
+    
     const startValue = parseFloat(element.textContent.replace(/[^0-9.]/g, '')) || 0;
     const endValue = parseFloat(targetValue.toString().replace(/[^0-9.]/g, '')) || 0;
     const startTime = performance.now();
-
+    
     function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-
+        
         // 使用缓动函数
         const easeOutQuart = 1 - Math.pow(1 - progress, 4);
         const currentValue = startValue + (endValue - startValue) * easeOutQuart;
-
+        
         if (prefix === '$') {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         } else {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         }
-
+        
         if (progress < 1) {
             requestAnimationFrame(update);
         } else {
@@ -31,14 +31,19 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
             }
         }
     }
-
+    
     requestAnimationFrame(update);
 }
 
-// 图表绘制函数（蜡烛图/K线图）
-function drawChart(canvasId, data, color = '#ff69b4') {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
+// 完整的交易图表绘制函数
+let bitcoinPriceHistory = [];
+let bitcoinVolumes = [];
+let lastBitcoinPrice = 0;
+let priceUpdateInterval = null;
+
+function drawTradingChart() {
+    const canvas = document.getElementById('bitcoinChart');
+    if (!canvas || !bitcoinPriceHistory.length) return;
     
     const ctx = canvas.getContext('2d');
     const width = canvas.width = canvas.offsetWidth;
@@ -46,263 +51,232 @@ function drawChart(canvasId, data, color = '#ff69b4') {
     
     ctx.clearRect(0, 0, width, height);
     
-    if (!data || data.length < 2) return;
-    
+    const data = bitcoinPriceHistory;
     const maxValue = Math.max(...data);
     const minValue = Math.min(...data);
     const range = maxValue - minValue || 1;
-    const padding = 40; // 增加内边距以容纳标注
-    const chartHeight = height - padding * 2;
-    const chartWidth = width - padding * 2;
-    
-    // 计算基准价格（用于百分比计算）
     const basePrice = data[0] || minValue;
     
-    // 绘制深色背景（接近黑色）
-    ctx.fillStyle = '#0a0a0a'; // 深色背景
+    const leftPadding = 50;
+    const rightPadding = 10;
+    const topPadding = 30;
+    const bottomPadding = 20;
+    const chartWidth = width - leftPadding - rightPadding;
+    const chartHeight = height - topPadding - bottomPadding;
+    
+    // 深色背景
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, width, height);
     
-    // 绘制背景网格
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    // 绘制网格
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
     
-    // 水平网格线
+    // 水平网格
     for (let i = 0; i <= 4; i++) {
-        const y = padding + (chartHeight / 4) * i;
+        const y = topPadding + (chartHeight / 4) * i;
         ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
+        ctx.moveTo(leftPadding, y);
+        ctx.lineTo(width - rightPadding, y);
         ctx.stroke();
     }
     
-    // 垂直网格线
-    for (let i = 0; i <= 4; i++) {
-        const x = padding + (chartWidth / 4) * i;
+    // 垂直网格
+    const timeLabels = ['08:00', '10:00', '12:00', '14:00', '16:00'];
+    for (let i = 0; i < timeLabels.length; i++) {
+        const x = leftPadding + (chartWidth / (timeLabels.length - 1)) * i;
         ctx.beginPath();
-        ctx.moveTo(x, padding);
-        ctx.lineTo(x, height - padding);
+        ctx.moveTo(x, topPadding);
+        ctx.lineTo(x, height - bottomPadding);
         ctx.stroke();
+        
+        // 时间标签
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.font = '11px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(timeLabels[i], x, height - 5);
     }
     
-    // 绘制水平参考线（虚线）
-    // 中间参考线（浅蓝色）
-    const midY = padding + chartHeight / 2;
-    ctx.strokeStyle = 'rgba(135, 206, 250, 0.6)'; // 浅蓝色虚线
+    // 水平参考线（虚线）
+    const midY = topPadding + chartHeight / 2;
+    ctx.strokeStyle = 'rgba(135, 206, 250, 0.5)';
     ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
-    ctx.moveTo(padding, midY);
-    ctx.lineTo(width - padding, midY);
+    ctx.moveTo(leftPadding, midY);
+    ctx.lineTo(width - rightPadding, midY);
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // 上方参考线（浅灰色）
-    const upperY = padding + chartHeight / 4;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.setLineDash([5, 5]);
+    // 绘制折线图（蓝色/青色）
+    ctx.strokeStyle = '#00d4ff';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(padding, upperY);
-    ctx.lineTo(width - padding, upperY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 计算蜡烛图数据（OHLC）
-    const candles = [];
-    for (let i = 0; i < data.length; i++) {
-        const currentPrice = data[i];
-        const prevPrice = i > 0 ? data[i - 1] : currentPrice;
-
-        // 模拟开高低收数据
-        const open = prevPrice;
-        const close = currentPrice;
-        const high = Math.max(open, close) + Math.abs(close - open) * 0.3;
-        const low = Math.min(open, close) - Math.abs(close - open) * 0.3;
-
-        candles.push({ open, high, low, close });
-    }
-
-    // 绘制蜡烛图
-    const candleWidth = chartWidth / candles.length * 0.8;
-    const candleSpacing = chartWidth / candles.length;
-
-    candles.forEach((candle, index) => {
-        const x = padding + index * candleSpacing + candleSpacing / 2;
-        const isBullish = candle.close >= candle.open;
-
-        // 计算Y坐标
-        const highY = padding + chartHeight - ((candle.high - minValue) / range) * chartHeight;
-        const lowY = padding + chartHeight - ((candle.low - minValue) / range) * chartHeight;
-        const openY = padding + chartHeight - ((candle.open - minValue) / range) * chartHeight;
-        const closeY = padding + chartHeight - ((candle.close - minValue) / range) * chartHeight;
-
-        // 绘制上下影线
-        ctx.strokeStyle = isBullish ? '#3b82f6' : '#ff69b4'; // 蓝色上涨，粉色下跌
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x, highY);
-        ctx.lineTo(x, lowY);
-        ctx.stroke();
-
-        // 绘制蜡烛实体
-        const bodyTop = Math.min(openY, closeY);
-        const bodyBottom = Math.max(openY, closeY);
-        const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
-
-        if (isBullish) {
-            // 上涨：蓝色实心
-            ctx.fillStyle = '#3b82f6'; // 蓝色
-            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+    
+    data.forEach((value, index) => {
+        const x = leftPadding + (chartWidth / (data.length - 1)) * index;
+        const normalizedValue = (value - minValue) / range;
+        const y = topPadding + chartHeight - (normalizedValue * chartHeight);
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
         } else {
-            // 下跌：粉色实心
-            ctx.fillStyle = '#ff69b4'; // 粉色
-            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+            ctx.lineTo(x, y);
         }
-
-        // 绘制边框
-        ctx.strokeStyle = isBullish ? '#60a5fa' : '#ff8cc8';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
     });
     
-    // 绘制价格标注（在关键点）
+    ctx.stroke();
+    
+    // 填充区域
+    ctx.fillStyle = 'rgba(0, 212, 255, 0.1)';
+    ctx.lineTo(width - rightPadding, topPadding + chartHeight);
+    ctx.lineTo(leftPadding, topPadding + chartHeight);
+    ctx.closePath();
+    ctx.fill();
+    
+    // 价格标注
     ctx.font = '11px Arial';
     ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
     
-    // 找到局部最高点和最低点进行标注
     const significantPoints = [];
     for (let i = 1; i < data.length - 1; i++) {
         const prev = data[i - 1];
         const curr = data[i];
         const next = data[i + 1];
         
-        // 局部最高点
-        if (curr > prev && curr > next) {
-            significantPoints.push({ index: i, price: curr, type: 'high' });
-        }
-        // 局部最低点
-        if (curr < prev && curr < next) {
-            significantPoints.push({ index: i, price: curr, type: 'low' });
+        if ((curr > prev && curr > next) || (curr < prev && curr < next)) {
+            significantPoints.push({ index: i, price: curr });
         }
     }
     
-    // 限制标注数量，避免过于拥挤
-    const maxAnnotations = 12;
-    const step = Math.max(1, Math.floor(significantPoints.length / maxAnnotations));
-    
+    // 限制标注数量
+    const step = Math.max(1, Math.floor(significantPoints.length / 15));
     significantPoints.forEach((point, idx) => {
-        if (idx % step !== 0 && significantPoints.length > maxAnnotations) return;
+        if (idx % step !== 0 && significantPoints.length > 15) return;
         
-        const x = padding + point.index * candleSpacing + candleSpacing / 2;
+        const x = leftPadding + (chartWidth / (data.length - 1)) * point.index;
         const normalizedValue = (point.price - minValue) / range;
-        const y = padding + chartHeight - (normalizedValue * chartHeight);
+        const y = topPadding + chartHeight - (normalizedValue * chartHeight);
         
-        // 计算百分比变化
         const percentChange = ((point.price - basePrice) / basePrice) * 100;
         const percentText = percentChange >= 0 
             ? `+${percentChange.toFixed(1)}%` 
             : `${percentChange.toFixed(1)}%`;
         
-        // 绘制标注线
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        // 标注线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.lineTo(x + 30, y - 15);
+        ctx.lineTo(x + 25, y - 12);
         ctx.stroke();
         
-        // 绘制标注文本
-        const priceText = basePrice.toFixed(1);
-        const fullText = `${priceText} (${percentText})`;
-        
+        // 标注文本
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(fullText, x + 35, y - 15);
+        const priceText = basePrice.toFixed(1);
+        ctx.fillText(`${priceText} (${percentText})`, x + 30, y - 12);
+    });
+    
+    // 右侧价格刻度
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+        const price = minValue + (range / 4) * (4 - i);
+        const y = topPadding + (chartHeight / 4) * i;
+        ctx.fillText(price.toFixed(1), width - 5, y + 4);
+    }
+    
+    // 更新价格信息
+    if (data.length > 0) {
+        const open = data[0];
+        const close = data[data.length - 1];
+        const high = maxValue;
+        const low = minValue;
+        const change = close - open;
+        const changePercent = ((change / open) * 100);
+        
+        document.getElementById('chartOpen').textContent = open.toFixed(2);
+        document.getElementById('chartHigh').textContent = high.toFixed(2);
+        document.getElementById('chartLow').textContent = low.toFixed(2);
+        document.getElementById('chartClose').textContent = close.toFixed(2);
+        
+        const changeEl = document.getElementById('chartChange');
+        const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+        changeEl.textContent = changeText;
+        changeEl.style.color = change >= 0 ? '#00ff88' : '#ff4444';
+    }
+}
+
+// 绘制成交量图表
+function drawVolumeChart() {
+    const canvas = document.getElementById('volumeChart');
+    if (!canvas || !bitcoinVolumes.length) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = canvas.offsetWidth;
+    const height = canvas.height = canvas.offsetHeight;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    const volumes = bitcoinVolumes;
+    const maxVolume = Math.max(...volumes) || 1;
+    const leftPadding = 50;
+    const rightPadding = 10;
+    
+    volumes.forEach((volume, index) => {
+        const x = leftPadding + ((width - leftPadding - rightPadding) / volumes.length) * index;
+        const barWidth = (width - leftPadding - rightPadding) / volumes.length * 0.8;
+        const barHeight = (volume / maxVolume) * height;
+        
+        // 根据价格变化决定颜色（简化：随机或基于趋势）
+        const isUp = index > 0 && bitcoinPriceHistory[index] >= bitcoinPriceHistory[index - 1];
+        ctx.fillStyle = isUp ? '#00ff88' : '#ff69b4';
+        ctx.fillRect(x, height - barHeight, barWidth, barHeight);
     });
 }
 
-// 生成随机数据用于图表
-function generateChartData(count = 15, min = 0, max = 100) {
-    return Array.from({ length: count }, () =>
-        Math.floor(Math.random() * (max - min + 1)) + min
-    );
-}
-
-// 设置 Apple Music 链接
-function setAppleMusic() {
-    const urlInput = document.getElementById('appleMusicUrl');
-    const iframe = document.getElementById('appleMusicFrame');
-    const placeholder = document.getElementById('musicPlaceholder');
-    const musicValue = document.getElementById('musicValue');
-
-    if (!urlInput || !iframe) return;
-
-    let musicUrl = urlInput.value.trim();
-
-    // 如果没有输入，尝试从 localStorage 读取
-    if (!musicUrl) {
-        musicUrl = localStorage.getItem('appleMusicUrl');
-    }
-
-    if (!musicUrl) {
-        alert('请输入 Apple Music 链接');
-        return;
-    }
-
-    // 转换 Apple Music 链接为嵌入格式
-    // 如果用户输入的是 music.apple.com 链接，转换为 embed.music.apple.com
-    if (musicUrl.includes('music.apple.com') && !musicUrl.includes('embed.music.apple.com')) {
-        musicUrl = musicUrl.replace('music.apple.com', 'embed.music.apple.com');
-    }
-
-    // 保存到 localStorage
-    localStorage.setItem('appleMusicUrl', musicUrl);
-
-    // 设置 iframe
-    iframe.src = musicUrl;
-    iframe.style.display = 'block';
-    if (placeholder) placeholder.style.display = 'none';
-
-    // 更新显示
-    if (musicValue) {
-        musicValue.textContent = 'Playing';
-    }
-
-    // 更新统计数字（模拟歌曲数量）
-    const musicStat = document.getElementById('musicStat');
-    if (musicStat) {
-        animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
-    }
-
-    // 尝试获取播放列表中的歌曲数量（需要用户授权）
-    // 这里只是显示一个示例数字
-    setTimeout(() => {
-        if (musicValue) {
-            musicValue.textContent = 'Apple Music';
+// 绘制VPVR（成交量分布）
+function drawVPVR() {
+    const canvas = document.getElementById('vpvrChart');
+    if (!canvas || !bitcoinPriceHistory.length || !bitcoinVolumes.length) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = canvas.offsetWidth;
+    const height = canvas.height = canvas.offsetHeight;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // 计算价格区间的成交量
+    const priceLevels = 20;
+    const maxPrice = Math.max(...bitcoinPriceHistory);
+    const minPrice = Math.min(...bitcoinPriceHistory);
+    const priceRange = maxPrice - minPrice || 1;
+    
+    const volumeByPrice = new Array(priceLevels).fill(0);
+    
+    bitcoinPriceHistory.forEach((price, index) => {
+        const level = Math.floor(((price - minPrice) / priceRange) * (priceLevels - 1));
+        if (level >= 0 && level < priceLevels) {
+            volumeByPrice[level] += bitcoinVolumes[index] || 0;
         }
-    }, 1000);
-}
-
-// 初始化 Apple Music
-function initAppleMusic() {
-    const savedUrl = localStorage.getItem('appleMusicUrl');
-    const iframe = document.getElementById('appleMusicFrame');
-    const placeholder = document.getElementById('musicPlaceholder');
-
-    if (savedUrl && iframe) {
-        iframe.src = savedUrl;
-        iframe.style.display = 'block';
-        if (placeholder) placeholder.style.display = 'none';
-    } else {
-        if (iframe) iframe.style.display = 'none';
-        if (placeholder) placeholder.style.display = 'flex';
-    }
+    });
+    
+    const maxVolume = Math.max(...volumeByPrice) || 1;
+    const barWidth = width * 0.6;
+    
+    volumeByPrice.forEach((volume, level) => {
+        const y = (height / priceLevels) * level;
+        const barHeight = height / priceLevels;
+        const barLength = (volume / maxVolume) * width;
+        
+        // 绿色表示买入，红色表示卖出（简化处理）
+        ctx.fillStyle = level < priceLevels / 2 ? '#00ff88' : '#ff69b4';
+        ctx.fillRect(width - barLength, y, barLength, barHeight);
+    });
 }
 
 // 从 TradingView API 获取比特币实时价格
-let bitcoinPriceHistory = [];
-let lastBitcoinPrice = 0;
-let priceUpdateInterval = null;
-
 async function fetchBitcoinPrice() {
     try {
         // 使用多个 API 源以确保可靠性
@@ -362,22 +336,29 @@ async function fetchBitcoinPrice() {
 // 实时更新比特币价格和图表
 async function updateBitcoinPrice() {
     const price = await fetchBitcoinPrice();
-
+    
     // 添加到历史记录
     bitcoinPriceHistory.push(price);
     // 保持最近60个数据点（1分钟的数据，每秒更新）
     if (bitcoinPriceHistory.length > 60) {
         bitcoinPriceHistory.shift();
     }
-
+    
+    // 模拟成交量（实际应该从API获取）
+    const volume = Math.random() * 1000000 + 500000;
+    bitcoinVolumes.push(volume);
+    if (bitcoinVolumes.length > 60) {
+        bitcoinVolumes.shift();
+    }
+    
     // 更新价格显示
     const bitcoinValueEl = document.getElementById('bitcoinValue');
     const bitcoinStat = document.getElementById('bitcoinStat');
-
+    
     if (bitcoinValueEl) {
         const currentPrice = parseFloat(bitcoinValueEl.textContent.replace(/[^0-9.]/g, '')) || price;
         const newPrice = price;
-
+        
         // 价格变化指示
         if (lastBitcoinPrice > 0) {
             if (newPrice > lastBitcoinPrice) {
@@ -388,7 +369,7 @@ async function updateBitcoinPrice() {
                 bitcoinValueEl.style.color = '#ffffff'; // 白色表示无变化
             }
         }
-
+        
         // 平滑更新价格数字
         if (typeof gsap !== 'undefined') {
             gsap.to({ value: currentPrice }, {
@@ -404,17 +385,17 @@ async function updateBitcoinPrice() {
             bitcoinValueEl.textContent = `$${Math.floor(price).toLocaleString()}`;
         }
     }
-
+    
     // 更新统计数字
     if (bitcoinStat) {
         bitcoinStat.textContent = `$${Math.floor(price).toLocaleString()}`;
     }
-
-    // 实时更新图表（粉色线条）
-    if (bitcoinPriceHistory.length > 1) {
-        drawChart('bitcoinChart', bitcoinPriceHistory, '#ff69b4');
-    }
-
+    
+    // 实时更新所有图表
+    drawTradingChart();
+    drawVolumeChart();
+    drawVPVR();
+    
     lastBitcoinPrice = price;
 }
 
@@ -422,35 +403,12 @@ async function updateBitcoinPrice() {
 function startBitcoinPriceUpdates() {
     // 立即更新一次
     updateBitcoinPrice();
-
+    
     // 每秒更新一次
     if (priceUpdateInterval) {
         clearInterval(priceUpdateInterval);
     }
     priceUpdateInterval = setInterval(updateBitcoinPrice, 1000);
-}
-
-// 更新访问人数（使用不蒜子，但也可以显示图表）
-function updateVisitorChart() {
-    // 等待不蒜子加载完成
-    setTimeout(() => {
-        const visitorCountEl = document.getElementById('busuanzi_value_site_pv');
-        if (visitorCountEl) {
-            const count = parseInt(visitorCountEl.textContent) || 0;
-            // 更新统计数字
-            const visitorStat = document.getElementById('visitorStat');
-            if (visitorStat && count > 0) {
-                animateNumber('visitorStat', count);
-            }
-            // 生成基于实际访问量的图表数据
-            const chartData = generateChartData(15, Math.max(0, count - 100), count + 100);
-            drawChart('visitorChart', chartData, '#00ff88');
-        } else {
-            // 如果不蒜子还没加载，使用默认数据
-            const chartData = generateChartData(15, 0, 100);
-            drawChart('visitorChart', chartData, '#00ff88');
-        }
-    }, 2000);
 }
 
 // 更新所有仪表板数据
@@ -460,221 +418,30 @@ async function updateDashboard() {
     startBitcoinPriceUpdates();
 }
 
-// GSAP 动画初始化
-function initGSAPAnimations() {
-    // 检查 GSAP 是否加载
-    if (typeof gsap === 'undefined') {
-        console.warn('GSAP not loaded');
-        return;
-    }
-
-    // 注册 ScrollTrigger 插件
-    if (typeof ScrollTrigger !== 'undefined') {
-        gsap.registerPlugin(ScrollTrigger);
-    }
-
-    // Hero 标题动画
-    gsap.from('.hero-title', {
-        scrollTrigger: {
-            trigger: '.hero-section',
-            start: 'top 80%',
-            toggleActions: 'play none none none'
-        },
-        opacity: 0,
-        y: 100,
-        duration: 1.2,
-        ease: 'power3.out'
-    });
-
-    // Hero 按钮动画
-    gsap.from('.hero-buttons', {
-        opacity: 0,
-        y: 50,
-        duration: 1,
-        ease: 'power3.out',
-        delay: 0.8
-    });
-
-    // Portfolio 标题动画
-    gsap.from('.portfolio-title', {
-        scrollTrigger: {
-            trigger: '.portfolio-section',
-            start: 'top 80%',
-            toggleActions: 'play none none none'
-        },
-        opacity: 0,
-        y: 80,
-        duration: 1,
-        ease: 'power3.out'
-    });
-
-    // Portfolio 项目动画
-    gsap.utils.toArray('.portfolio-item').forEach((item, index) => {
-        gsap.from(item, {
-            scrollTrigger: {
-                trigger: item,
-                start: 'top 85%',
-                toggleActions: 'play none none none'
-            },
-            opacity: 0,
-            x: -100,
-            duration: 0.8,
-            ease: 'power3.out',
-            delay: index * 0.1
-        });
-    });
-
-    // Stats 卡片动画
-    gsap.utils.toArray('.stat-card').forEach((card, index) => {
-        gsap.from(card, {
-            scrollTrigger: {
-                trigger: card,
-                start: 'top 85%',
-                toggleActions: 'play none none none'
-            },
-            opacity: 0,
-            scale: 0.8,
-            duration: 0.8,
-            ease: 'back.out(1.7)',
-            delay: index * 0.15
-        });
-    });
-
-    // Dashboard 卡片动画
-    gsap.utils.toArray('.dashboard-card').forEach((card, index) => {
-        gsap.from(card, {
-            scrollTrigger: {
-                trigger: card,
-                start: 'top 85%',
-                toggleActions: 'play none none none'
-            },
-            opacity: 0,
-            y: 50,
-            duration: 0.8,
-            ease: 'power3.out',
-            delay: index * 0.1
-        });
-    });
-
-    // 项目卡片悬停动画增强
-    document.querySelectorAll('.portfolio-item').forEach(item => {
-        const title = item.querySelector('.portfolio-item-title');
-        const desc = item.querySelector('.portfolio-item-desc');
-        const arrow = item.querySelector('.portfolio-item-arrow');
-
-        item.addEventListener('mouseenter', () => {
-            gsap.to(title, {
-                x: 10,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-            gsap.to(desc, {
-                x: 10,
-                opacity: 1,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-            gsap.to(arrow, {
-                x: 0,
-                opacity: 1,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-        });
-
-        item.addEventListener('mouseleave', () => {
-            gsap.to(title, {
-                x: 0,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-            gsap.to(desc, {
-                x: 0,
-                opacity: 0.7,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-            gsap.to(arrow, {
-                x: -30,
-                opacity: 0,
-                duration: 0.4,
-                ease: 'power2.out'
-            });
-        });
-    });
-
-    // 平滑滚动
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target && typeof gsap !== 'undefined') {
-                gsap.to(window, {
-                    duration: 1.5,
-                    scrollTo: {
-                        y: target,
-                        offsetY: 80
-                    },
-                    ease: 'power3.inOut'
-                });
-            }
-        });
-    });
-}
-
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     // 初始化 GSAP 动画
     if (typeof gsap !== 'undefined') {
         initGSAPAnimations();
     }
-
-    // 初始化 Apple Music
-    initAppleMusic();
-
-    // 初始化统计数字动画
-    setTimeout(() => {
-        const musicStat = document.getElementById('musicStat');
-        if (musicStat && musicStat.textContent === '0') {
-            animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
-        }
-    }, 500);
-
+    
     // 初始化仪表板（启动实时比特币价格更新）
     updateDashboard();
-
+    
     // 窗口大小改变时重新绘制图表
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            updateDashboard();
+            drawTradingChart();
+            drawVolumeChart();
+            drawVPVR();
         }, 200);
     });
-
-    // 作品集项目点击交互
-    const portfolioItems = document.querySelectorAll('.portfolio-item');
-    portfolioItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const projectId = this.getAttribute('data-project');
-
-            // 移除所有活动状态
-            portfolioItems.forEach(i => i.classList.remove('active'));
-
-            // 添加活动状态
-            this.classList.add('active');
-
-            // 可以在这里添加项目详情显示逻辑
-            console.log('Selected project:', projectId);
-
-            // 平滑滚动到项目详情区域（如果有）
-            // 或者显示项目详情模态框
-        });
-    });
-
+    
     // 为所有工具卡片添加点击效果
     const toolCards = document.querySelectorAll('.tool-card');
-
+    
     toolCards.forEach(card => {
         card.addEventListener('click', function() {
             this.style.transform = 'scale(0.98)';
@@ -699,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalText = mainTitle.textContent;
         mainTitle.textContent = '';
         let i = 0;
-
+        
         function typeWriter() {
             if (i < originalText.length) {
                 mainTitle.textContent += originalText.charAt(i);
@@ -707,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(typeWriter, 50);
             }
         }
-
+        
         setTimeout(typeWriter, 500);
     }
 
@@ -722,3 +489,169 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 3000);
 });
+
+// GSAP 动画初始化
+function initGSAPAnimations() {
+    // 检查 GSAP 是否加载
+    if (typeof gsap === 'undefined') {
+        console.warn('GSAP not loaded');
+        return;
+    }
+    
+    // 注册 ScrollTrigger 插件
+    if (typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+    }
+    
+    // Hero 标题动画
+    gsap.from('.hero-title', {
+        scrollTrigger: {
+            trigger: '.hero-section',
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 100,
+        duration: 1.2,
+        ease: 'power3.out'
+    });
+    
+    // Hero 按钮动画
+    gsap.from('.hero-buttons', {
+        scrollTrigger: {
+            trigger: '.hero-section',
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        ease: 'power3.out'
+    });
+    
+    // Portfolio 标题动画
+    gsap.from('.portfolio-title', {
+        scrollTrigger: {
+            trigger: '.portfolio-section',
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+        },
+        opacity: 0,
+        y: 80,
+        duration: 1,
+        ease: 'power3.out'
+    });
+    
+    // Portfolio 项目动画
+    gsap.utils.toArray('.portfolio-item').forEach((item, index) => {
+        gsap.from(item, {
+            scrollTrigger: {
+                trigger: item,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            x: -100,
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * 0.1
+        });
+    });
+    
+    // Stats 卡片动画
+    gsap.utils.toArray('.stat-card').forEach((card, index) => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.8,
+            ease: 'back.out(1.7)',
+            delay: index * 0.15
+        });
+    });
+    
+    // Dashboard 卡片动画
+    gsap.utils.toArray('.dashboard-card').forEach((card, index) => {
+        gsap.from(card, {
+            scrollTrigger: {
+                trigger: card,
+                start: 'top 85%',
+                toggleActions: 'play none none none'
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * 0.1
+        });
+    });
+    
+    // 项目卡片悬停动画增强
+    document.querySelectorAll('.portfolio-item').forEach(item => {
+        const title = item.querySelector('.portfolio-item-title');
+        const desc = item.querySelector('.portfolio-item-desc');
+        const arrow = item.querySelector('.portfolio-item-arrow');
+        
+        item.addEventListener('mouseenter', () => {
+            gsap.to(title, {
+                x: 10,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(desc, {
+                x: 10,
+                opacity: 1,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(arrow, {
+                x: 0,
+                opacity: 1,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            gsap.to(title, {
+                x: 0,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(desc, {
+                x: 0,
+                opacity: 0.7,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+            gsap.to(arrow, {
+                x: -30,
+                opacity: 0,
+                duration: 0.4,
+                ease: 'power2.out'
+            });
+        });
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target && typeof gsap !== 'undefined') {
+                gsap.to(window, {
+                    duration: 1.5,
+                    scrollTo: {
+                        y: target,
+                        offsetY: 80
+                    },
+                    ease: 'power3.inOut'
+                });
+            }
+        });
+    });
+}
