@@ -264,7 +264,7 @@ function initWelcomeAnimations() {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
         // 如果 GSAP 未加载，使用 CSS 动画
         const welcomeItems = document.querySelectorAll('.welcome-item');
-        welcomeItems.forEach((item, index) => {
+        welcomeItems.forEach((item) => {
             item.style.opacity = '1';
             item.style.transform = 'translateY(0) scale(1)';
         });
@@ -273,65 +273,56 @@ function initWelcomeAnimations() {
     
     const welcomeItems = document.querySelectorAll('.welcome-item');
     
-    // 初始状态：第一个元素可见，其他隐藏
+    // 所有元素同时淡入动画
     welcomeItems.forEach((item, index) => {
-        if (index === 0) {
-            gsap.set(item, { opacity: 1, y: 0, scale: 1 });
-        } else {
-            gsap.set(item, { opacity: 0, y: 100, scale: 0.8 });
-        }
-    });
-    
-    welcomeItems.forEach((item, index) => {
-        // 元素淡入动画
-        gsap.to(item, {
+        gsap.from(item, {
             scrollTrigger: {
-                trigger: item,
-                start: 'top 70%',
-                end: 'top 30%',
+                trigger: '.welcome-section',
+                start: 'top 80%',
                 toggleActions: 'play none none none',
                 once: true
             },
-            opacity: 1,
-            y: 0,
-            scale: 1,
+            opacity: 0,
+            y: 50,
+            scale: 0.8,
             duration: 1,
-            ease: 'power3.out'
+            ease: 'power3.out',
+            delay: index * 0.2
         });
         
-        // 图标动画
+        // 图标旋转动画
         const icon = item.querySelector('.welcome-icon');
         if (icon) {
             gsap.from(icon, {
                 scrollTrigger: {
-                    trigger: item,
-                    start: 'top 70%',
+                    trigger: '.welcome-section',
+                    start: 'top 80%',
                     toggleActions: 'play none none none',
                     once: true
                 },
-                scale: 0.3,
-                rotation: -360,
-                duration: 1.5,
+                scale: 0,
+                rotation: -180,
+                duration: 1.2,
                 ease: 'back.out(1.7)',
-                delay: 0.2
+                delay: index * 0.2 + 0.3
             });
         }
         
-        // 文字动画
+        // 文字淡入动画
         const text = item.querySelector('.welcome-text');
         if (text) {
             gsap.from(text, {
                 scrollTrigger: {
-                    trigger: item,
-                    start: 'top 70%',
+                    trigger: '.welcome-section',
+                    start: 'top 80%',
                     toggleActions: 'play none none none',
                     once: true
                 },
                 opacity: 0,
-                x: -150,
-                duration: 1,
+                y: 30,
+                duration: 0.8,
                 ease: 'power3.out',
-                delay: 0.4
+                delay: index * 0.2 + 0.5
             });
         }
     });
