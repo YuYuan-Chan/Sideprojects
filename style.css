@@ -227,21 +227,20 @@ body::after {
     }
 }
 
+
 /* 响应式设计 */
+
 @media (max-width: 968px) {
     .welcome-container {
         grid-template-columns: 1fr;
         gap: 80px;
     }
-    
     .welcome-item {
         min-height: auto;
     }
-    
     .welcome-icon {
         font-size: clamp(100px, 20vw, 200px);
     }
-    
     .welcome-text {
         font-size: clamp(32px, 6vw, 64px);
     }

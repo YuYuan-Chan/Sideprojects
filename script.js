@@ -259,90 +259,6 @@ async function updateDashboard() {
     updateVisitorChart();
 }
 
-// 欢迎界面滚动动画
-function initWelcomeAnimations() {
-    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-        // 如果 GSAP 未加载，使用 CSS 动画
-        const welcomeItems = document.querySelectorAll('.welcome-item');
-        welcomeItems.forEach((item) => {
-            item.style.opacity = '1';
-            item.style.transform = 'translateY(0) scale(1)';
-        });
-        return;
-    }
-    
-    const welcomeItems = document.querySelectorAll('.welcome-item');
-    
-    // 所有元素同时淡入动画
-    welcomeItems.forEach((item, index) => {
-        gsap.from(item, {
-            scrollTrigger: {
-                trigger: '.welcome-section',
-                start: 'top 80%',
-                toggleActions: 'play none none none',
-                once: true
-            },
-            opacity: 0,
-            y: 50,
-            scale: 0.8,
-            duration: 1,
-            ease: 'power3.out',
-            delay: index * 0.2
-        });
-        
-        // 图标旋转动画
-        const icon = item.querySelector('.welcome-icon');
-        if (icon) {
-            gsap.from(icon, {
-                scrollTrigger: {
-                    trigger: '.welcome-section',
-                    start: 'top 80%',
-                    toggleActions: 'play none none none',
-                    once: true
-                },
-                scale: 0,
-                rotation: -180,
-                duration: 1.2,
-                ease: 'back.out(1.7)',
-                delay: index * 0.2 + 0.3
-            });
-        }
-        
-        // 文字淡入动画
-        const text = item.querySelector('.welcome-text');
-        if (text) {
-            gsap.from(text, {
-                scrollTrigger: {
-                    trigger: '.welcome-section',
-                    start: 'top 80%',
-                    toggleActions: 'play none none none',
-                    once: true
-                },
-                opacity: 0,
-                y: 30,
-                duration: 0.8,
-                ease: 'power3.out',
-                delay: index * 0.2 + 0.5
-            });
-        }
-    });
-    
-    // 滚动指示器淡出
-    const scrollIndicator = document.querySelector('.scroll-indicator');
-    if (scrollIndicator) {
-        gsap.to(scrollIndicator, {
-            scrollTrigger: {
-                trigger: '.welcome-section',
-                start: 'top top',
-                end: 'bottom top',
-                scrub: true
-            },
-            opacity: 0,
-            y: -50
-        });
-    }
-}
-
 // GSAP 动画初始化
 function initGSAPAnimations() {
     // 检查 GSAP 是否加载
@@ -355,9 +271,6 @@ function initGSAPAnimations() {
     if (typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
     }
-
-    // 初始化欢迎界面动画
-    initWelcomeAnimations();
 
     // Hero 标题动画
     gsap.from('.hero-title', {
