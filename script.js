@@ -2,25 +2,25 @@
 function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suffix = '') {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     const startValue = parseFloat(element.textContent.replace(/[^0-9.]/g, '')) || 0;
     const endValue = parseFloat(targetValue.toString().replace(/[^0-9.]/g, '')) || 0;
     const startTime = performance.now();
-    
+
     function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // 使用缓动函数
         const easeOutQuart = 1 - Math.pow(1 - progress, 4);
         const currentValue = startValue + (endValue - startValue) * easeOutQuart;
-        
+
         if (prefix === '$') {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         } else {
             element.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
         }
-        
+
         if (progress < 1) {
             requestAnimationFrame(update);
         } else {
@@ -31,7 +31,7 @@ function animateNumber(elementId, targetValue, duration = 2000, prefix = '', suf
             }
         }
     }
-    
+
     requestAnimationFrame(update);
 }
 
@@ -106,18 +106,18 @@ function setAppleMusic() {
     iframe.src = musicUrl;
     iframe.style.display = 'block';
     if (placeholder) placeholder.style.display = 'none';
-    
+
     // 更新显示
     if (musicValue) {
         musicValue.textContent = 'Playing';
     }
-    
+
     // 更新统计数字（模拟歌曲数量）
     const musicStat = document.getElementById('musicStat');
     if (musicStat) {
         animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
     }
-    
+
     // 尝试获取播放列表中的歌曲数量（需要用户授权）
     // 这里只是显示一个示例数字
     setTimeout(() => {
@@ -236,16 +236,16 @@ async function updateDashboard() {
     const bitcoinPrice = await fetchBitcoinPrice();
     const bitcoinValueEl = document.getElementById('bitcoinValue');
     const bitcoinStat = document.getElementById('bitcoinStat');
-    
+
     if (bitcoinValueEl) {
         bitcoinValueEl.textContent = `$${bitcoinPrice.toLocaleString()}`;
     }
-    
+
     // 更新统计数字
     if (bitcoinStat) {
         animateNumber('bitcoinStat', bitcoinPrice, 1500, '$');
     }
-    
+
     // 绘制比特币价格趋势图
     if (bitcoinPriceHistory.length > 0) {
         drawChart('bitcoinChart', bitcoinPriceHistory, '#00ff88');
@@ -254,7 +254,7 @@ async function updateDashboard() {
         const chartData = generateChartData(15, bitcoinPrice - 2000, bitcoinPrice + 2000);
         drawChart('bitcoinChart', chartData, '#00ff88');
     }
-    
+
     // 更新访问人数图表
     updateVisitorChart();
 }
@@ -263,7 +263,7 @@ async function updateDashboard() {
 document.addEventListener('DOMContentLoaded', function() {
     // 初始化 Apple Music
     initAppleMusic();
-    
+
     // 初始化统计数字动画
     setTimeout(() => {
         const musicStat = document.getElementById('musicStat');
@@ -271,10 +271,10 @@ document.addEventListener('DOMContentLoaded', function() {
             animateNumber('musicStat', Math.floor(Math.random() * 200) + 50);
         }
     }, 500);
-    
+
     // 初始化仪表板
     updateDashboard();
-    
+
     // 每10秒更新一次比特币价格
     setInterval(() => {
         updateDashboard();
