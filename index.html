@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Side Project</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -31,7 +33,15 @@
                     <span class="info-icon">ℹ</span>
                 </div>
                 <div class="panel-chart">
-                    <canvas id="musicChart" class="mini-chart"></canvas>
+                    <div id="appleMusicPlayer" class="apple-music-container">
+                        <iframe id="appleMusicFrame" allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                            src=""></iframe>
+                        <div class="music-placeholder" id="musicPlaceholder">
+                            <p>请设置您的 Apple Music 链接</p>
+                            <input type="text" id="appleMusicUrl" placeholder="输入 Apple Music 链接" class="music-input">
+                            <button onclick="setAppleMusic()" class="music-btn">设置</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="panel-divider"></div>
                 <div class="panel-value">
@@ -65,7 +75,9 @@
                 </div>
                 <div class="panel-divider"></div>
                 <div class="panel-value">
-                    <span class="value-number" id="visitorValue">0</span>
+                    <span class="value-number">
+                        <span id="busuanzi_value_site_pv">0</span>
+                    </span>
                     <span class="value-unit">views</span>
                 </div>
             </div>
@@ -150,7 +162,13 @@
         </section>
     </div>
 
+    <!-- 不蒜子访问统计 -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+    <!-- TradingView Script for Price -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <script src="script.js"></script>
 </body>
-</html>
 
+</html>
