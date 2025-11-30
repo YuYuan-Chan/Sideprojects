@@ -237,7 +237,7 @@ function drawTradingChart() {
         const changeEl = document.getElementById('chartChange');
         const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
         changeEl.textContent = changeText;
-        changeEl.style.color = change >= 0 ? '#00ff88' : '#ff4444';
+        changeEl.style.color = change >= 0 ? '#ffffff' : '#888888';
     }
 }
 
@@ -264,7 +264,7 @@ function drawVolumeChart() {
 
         // 根据价格变化决定颜色（简化：随机或基于趋势）
         const isUp = index > 0 && bitcoinPriceHistory[index] >= bitcoinPriceHistory[index - 1];
-        ctx.fillStyle = isUp ? '#00ff88' : '#ff69b4';
+        ctx.fillStyle = isUp ? '#ffffff' : '#888888';
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
     });
 }
@@ -303,8 +303,8 @@ function drawVPVR() {
         const barHeight = height / priceLevels;
         const barLength = (volume / maxVolume) * width;
 
-        // 绿色表示买入，红色表示卖出（简化处理）
-        ctx.fillStyle = level < priceLevels / 2 ? '#00ff88' : '#ff69b4';
+        // 白色表示买入，灰色表示卖出（简化处理）
+        ctx.fillStyle = level < priceLevels / 2 ? '#ffffff' : '#888888';
         ctx.fillRect(width - barLength, y, barLength, barHeight);
     });
 }
@@ -395,9 +395,9 @@ async function updateBitcoinPrice() {
         // 价格变化指示
         if (lastBitcoinPrice > 0) {
             if (newPrice > lastBitcoinPrice) {
-                bitcoinValueEl.style.color = '#00ff88'; // 绿色表示上涨
+                bitcoinValueEl.style.color = '#ffffff'; // 白色表示上涨
             } else if (newPrice < lastBitcoinPrice) {
-                bitcoinValueEl.style.color = '#ff4444'; // 红色表示下跌
+                bitcoinValueEl.style.color = '#888888'; // 灰色表示下跌
             } else {
                 bitcoinValueEl.style.color = '#ffffff'; // 白色表示无变化
             }
@@ -511,13 +511,13 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(typeWriter, 500);
     }
 
-    // 随机闪烁效果
+    // 随机闪烁效果 - 简化为极简风格
     setInterval(() => {
         if (toolCards.length > 0) {
             const randomCard = toolCards[Math.floor(Math.random() * toolCards.length)];
-            randomCard.style.boxShadow = '0 0 30px rgba(0, 255, 0, 0.8)';
+            randomCard.style.borderColor = '#ffffff';
             setTimeout(() => {
-                randomCard.style.boxShadow = '';
+                randomCard.style.borderColor = '';
             }, 200);
         }
     }, 3000);

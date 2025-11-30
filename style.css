@@ -5,16 +5,16 @@
 }
 
 :root {
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #111111;
-    --bg-card: rgba(255, 255, 255, 0.03);
+    --bg-primary: #141414;
+    --bg-secondary: #1a1a1a;
+    --bg-card: rgba(255, 255, 255, 0.02);
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --accent-primary: #00ff88;
-    --accent-secondary: #00ccff;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --gradient-1: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
-    --gradient-2: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 204, 255, 0.1) 100%);
+    --text-secondary: rgba(255, 255, 255, 0.5);
+    --accent-primary: #ffffff;
+    --accent-secondary: #888888;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --gradient-1: none;
+    --gradient-2: none;
 }
 
 body {
@@ -31,32 +31,7 @@ body {
 }
 
 
-/* Background Effects */
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 20% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(0, 204, 255, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 50px 50px;
-    pointer-events: none;
-    z-index: 0;
-}
+/* Background Effects - Removed for minimalist design */
 
 
 /* Navigation */
@@ -67,8 +42,7 @@ body::after {
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(10, 10, 10, 0.8);
-    backdrop-filter: blur(20px);
+    background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
     padding: 20px 0;
 }
@@ -100,28 +74,12 @@ body::after {
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 15px;
-    font-weight: 500;
-    transition: color 0.3s ease;
-    position: relative;
+    font-weight: 400;
+    transition: color 0.2s ease;
 }
 
 .nav-links a:hover {
     color: var(--text-primary);
-}
-
-.nav-links a::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--gradient-1);
-    transition: width 0.3s ease;
-}
-
-.nav-links a:hover::after {
-    width: 100%;
 }
 
 
@@ -168,15 +126,13 @@ body::after {
 .welcome-icon {
     font-size: clamp(80px, 12vw, 150px);
     margin-bottom: 30px;
-    filter: drop-shadow(0 10px 30px rgba(0, 255, 136, 0.3));
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     display: block;
     cursor: pointer;
 }
 
 .welcome-item:hover .welcome-icon {
-    transform: scale(1.2) rotate(10deg);
-    filter: drop-shadow(0 20px 50px rgba(0, 255, 136, 0.6));
+    transform: scale(1.05);
 }
 
 .welcome-text {
@@ -187,13 +143,11 @@ body::after {
     text-transform: uppercase;
     color: var(--text-primary);
     text-align: center;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 
 .welcome-item:hover .welcome-text {
-    color: var(--accent-primary);
-    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-    transform: translateY(-5px);
+    color: var(--text-secondary);
 }
 
 .scroll-indicator {
@@ -214,7 +168,7 @@ body::after {
 
 .scroll-arrow {
     font-size: 24px;
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 @keyframes bounce {
@@ -283,10 +237,7 @@ body::after {
 }
 
 .title-line.highlight {
-    background: var(--gradient-1);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
 }
 
 .hero-subtitle {
@@ -312,34 +263,33 @@ body::after {
 
 .btn {
     padding: 16px 32px;
-    border-radius: 8px;
+    border-radius: 0;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 400;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: inline-block;
 }
 
 .btn-primary {
-    background: var(--gradient-1);
+    background: var(--text-primary);
     color: var(--bg-primary);
-    border: none;
+    border: 1px solid var(--text-primary);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    background: transparent;
+    color: var(--text-primary);
 }
 
 .btn-secondary {
     background: transparent;
     color: var(--text-primary);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover {
-    border-color: var(--accent-primary);
-    background: var(--gradient-2);
+    border-color: var(--text-primary);
 }
 
 
@@ -401,8 +351,8 @@ body::after {
     top: 0;
     bottom: 0;
     width: 0;
-    background: linear-gradient(90deg, rgba(0, 255, 136, 0.05) 0%, transparent 100%);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(255, 255, 255, 0.02);
+    transition: width 0.3s ease;
     z-index: 0;
 }
 
@@ -431,7 +381,7 @@ body::after {
 
 .portfolio-item:hover .portfolio-item-content {
     padding-left: 30px;
-    border-bottom-color: var(--accent-primary);
+    border-bottom-color: var(--text-primary);
 }
 
 .portfolio-item-title {
@@ -442,29 +392,11 @@ body::after {
     margin-bottom: 0;
     letter-spacing: 1px;
     text-transform: uppercase;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    display: inline-block;
-}
-
-.portfolio-item-title::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--gradient-1);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 
 .portfolio-item:hover .portfolio-item-title {
-    color: var(--accent-primary);
     transform: translateX(5px);
-}
-
-.portfolio-item:hover .portfolio-item-title::after {
-    width: 100%;
 }
 
 .portfolio-item-desc {
@@ -487,34 +419,28 @@ body::after {
     font-size: 24px;
     color: var(--text-secondary);
     opacity: 0;
-    transform: translateX(-30px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 300;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
     margin-left: 20px;
 }
 
 .portfolio-item:hover .portfolio-item-arrow {
     opacity: 1;
     transform: translateX(0);
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 .portfolio-item.active {
-    background: var(--gradient-2);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .portfolio-item.active .portfolio-item-content {
-    border-bottom-color: var(--accent-primary);
+    border-bottom-color: var(--text-primary);
     padding-left: 30px;
 }
 
 .portfolio-item.active .portfolio-item-title {
-    color: var(--accent-primary);
     transform: translateX(5px);
-}
-
-.portfolio-item.active .portfolio-item-title::after {
-    width: 100%;
 }
 
 .portfolio-item.active .portfolio-item-desc {
@@ -526,7 +452,7 @@ body::after {
 .portfolio-item.active .portfolio-item-arrow {
     opacity: 1;
     transform: translateX(0);
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 
@@ -552,24 +478,18 @@ body::after {
     padding: 40px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    border-radius: 0;
+    transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-primary);
-    box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+    border-color: var(--text-primary);
 }
 
 .stat-number {
     font-size: clamp(48px, 6vw, 72px);
-    font-weight: 800;
-    background: var(--gradient-1);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-weight: 700;
+    color: var(--text-primary);
     margin-bottom: 10px;
     line-height: 1;
 }
@@ -628,34 +548,15 @@ body::after {
 .dashboard-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 0;
     padding: 30px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
 }
 
-.dashboard-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--gradient-1);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-}
-
 .dashboard-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-primary);
-    box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
-}
-
-.dashboard-card:hover::before {
-    transform: scaleX(1);
+    border-color: var(--text-primary);
 }
 
 .card-header {
@@ -754,7 +655,7 @@ body::after {
 }
 
 .chart-pair {
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 .chart-timeframe {
@@ -776,7 +677,7 @@ body::after {
 }
 
 .price-change {
-    color: var(--accent-primary);
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -858,13 +759,13 @@ body::after {
     width: 100%;
     max-width: 400px;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 0;
     color: var(--text-primary);
     font-size: 14px;
     font-family: inherit;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .music-input::placeholder {
@@ -874,27 +775,26 @@ body::after {
 
 .music-input:focus {
     outline: none;
-    border-color: var(--accent-primary);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+    border-color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .music-btn {
     padding: 12px 24px;
-    background: var(--gradient-1);
-    border: none;
-    border-radius: 8px;
+    background: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    border-radius: 0;
     color: var(--bg-primary);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .music-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    background: transparent;
+    color: var(--text-primary);
 }
 
 
@@ -918,17 +818,14 @@ body::after {
 .project-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 0;
     padding: 30px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     cursor: pointer;
 }
 
 .project-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-primary);
-    box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+    border-color: var(--text-primary);
 }
 
 .project-header {
@@ -945,18 +842,18 @@ body::after {
 }
 
 .new-badge {
-    background: var(--gradient-1);
+    background: var(--text-primary);
     color: var(--bg-primary);
     padding: 4px 12px;
-    border-radius: 12px;
+    border-radius: 0;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.5px;
 }
 
 .project-preview {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0;
     padding: 20px;
     margin-bottom: 20px;
     min-height: 120px;
@@ -989,19 +886,18 @@ body::after {
 }
 
 .tag {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--border-color);
     padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 0;
     font-size: 12px;
     color: var(--text-secondary);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .tag:hover {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    background: rgba(0, 255, 136, 0.1);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
 }
 
 .project-footer {
@@ -1011,8 +907,8 @@ body::after {
 
 .arrow {
     font-size: 24px;
-    color: var(--accent-primary);
-    transition: transform 0.3s ease;
+    color: var(--text-primary);
+    transition: transform 0.2s ease;
 }
 
 .project-card:hover .arrow {
