@@ -1,235 +1,178 @@
-/* Reset */
+/* Minimal Brutalist Portfolio - Inspired by camillemormal.com */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Variables */
-:root {
-    --bg: #141414;
-    --text: #ffffff;
-    --text-dim: rgba(255, 255, 255, 0.5);
-    --border: rgba(255, 255, 255, 0.1);
-    --spacing: 40px;
-}
-
-/* Base */
 html {
     font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background-color: #141414;
+    color: #ffffff;
+    line-height: 1.5;
     font-weight: 400;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Container */
-.container {
-    max-width: 900px;
+.page {
+    max-width: 800px;
     margin: 0 auto;
-    padding: var(--spacing);
+    padding: 60px 30px;
 }
 
 /* Header */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing) 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: calc(var(--spacing) * 2);
+    margin-bottom: 80px;
 }
 
-.site-title {
-    font-size: 18px;
+.header-inner {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 40px;
+}
+
+.name {
+    font-size: 24px;
     font-weight: 400;
+    margin-bottom: 10px;
     letter-spacing: -0.02em;
 }
 
+.tagline {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+}
+
+/* Navigation */
 .nav {
     display: flex;
     gap: 30px;
+    margin-bottom: 80px;
 }
 
-.nav a {
-    color: var(--text-dim);
+.nav-link {
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
     font-size: 14px;
     transition: color 0.2s;
 }
 
-.nav a:hover {
-    color: var(--text);
+.nav-link:hover {
+    color: #ffffff;
 }
 
-/* Main */
-.main {
-    padding-bottom: calc(var(--spacing) * 3);
+/* Sections */
+.section {
+    margin-bottom: 100px;
 }
 
-/* Intro */
-.intro {
-    margin-bottom: calc(var(--spacing) * 3);
-}
-
-.intro-title {
-    font-size: clamp(28px, 5vw, 48px);
-    font-weight: 400;
-    line-height: 1.2;
-    margin-bottom: 20px;
-    letter-spacing: -0.03em;
-}
-
-.intro-text {
-    font-size: 16px;
-    color: var(--text-dim);
-    max-width: 600px;
-    line-height: 1.7;
-}
-
-/* Section Label */
-.section-label {
+.section-title {
     font-size: 12px;
     font-weight: 400;
-    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 30px;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 40px;
 }
 
-/* Work Section */
-.work {
-    margin-bottom: calc(var(--spacing) * 3);
-}
-
+/* Work List */
 .work-list {
     display: flex;
     flex-direction: column;
 }
 
 .work-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 24px 0;
-    border-bottom: 1px solid var(--border);
-    text-decoration: none;
-    color: var(--text);
-    transition: all 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 30px 0;
+    transition: padding-left 0.2s;
 }
 
 .work-item:hover {
-    padding-left: 10px;
+    padding-left: 15px;
 }
 
-.work-item:hover .work-title {
-    color: var(--text);
-}
-
-.work-info {
-    flex: 1;
-}
-
-.work-title {
-    font-size: 20px;
+.work-name {
+    font-size: 22px;
     font-weight: 400;
-    margin-bottom: 4px;
-    color: var(--text);
+    margin-bottom: 6px;
     letter-spacing: -0.02em;
 }
 
-.work-desc {
+.work-type {
     font-size: 14px;
-    color: var(--text-dim);
+    color: rgba(255, 255, 255, 0.5);
 }
 
-.work-year {
-    font-size: 14px;
-    color: var(--text-dim);
-    font-feature-settings: 'tnum';
-}
-
-/* About Section */
-.about {
-    margin-bottom: calc(var(--spacing) * 3);
-}
-
-.about-content {
+/* Info Section */
+.info-content {
     max-width: 600px;
 }
 
-.about-content p {
+.info-content p {
     font-size: 16px;
-    color: var(--text-dim);
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.7;
     margin-bottom: 20px;
 }
 
 /* Contact Section */
-.contact {
-    margin-bottom: calc(var(--spacing) * 2);
-}
-
-.contact-info {
+.contact-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
 }
 
-.contact-link {
+.contact-item {
     font-size: 16px;
-    color: var(--text);
+    color: #ffffff;
     text-decoration: none;
-    border-bottom: 1px solid transparent;
     display: inline-block;
     width: fit-content;
+    border-bottom: 1px solid transparent;
     transition: border-color 0.2s;
 }
 
-.contact-link:hover {
-    border-bottom-color: var(--text);
+.contact-item:hover {
+    border-bottom-color: #ffffff;
 }
 
 /* Footer */
 .footer {
-    padding: var(--spacing) 0;
-    border-top: 1px solid var(--border);
+    margin-top: 100px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.footer p {
+.footer-text {
     font-size: 12px;
-    color: var(--text-dim);
+    color: rgba(255, 255, 255, 0.3);
     text-align: center;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    :root {
-        --spacing: 20px;
+    .page {
+        padding: 40px 20px;
     }
 
     .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 20px;
+        margin-bottom: 60px;
     }
 
     .nav {
-        gap: 20px;
+        margin-bottom: 60px;
     }
 
-    .work-item {
-        flex-direction: column;
-        gap: 8px;
+    .section {
+        margin-bottom: 80px;
     }
 
-    .work-year {
-        align-self: flex-start;
+    .work-name {
+        font-size: 20px;
     }
 }

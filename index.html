@@ -3,109 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edaen — Designer & Developer</title>
+    <title>Edaen</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
+    <div class="page">
         <header class="header">
-            <h1 class="site-title">Edaen</h1>
-            <nav class="nav">
-                <a href="#work">Work</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-            </nav>
+            <div class="header-inner">
+                <h1 class="name">Edaen</h1>
+                <p class="tagline">Independent Designer & Developer</p>
+            </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main">
-            <!-- Intro -->
-            <section class="intro">
-                <h2 class="intro-title">Designer & Developer based in Taiwan</h2>
-                <p class="intro-text">
-                    I create digital experiences that blend minimalist aesthetics with functional design.
-                    Currently available for select projects.
-                </p>
-            </section>
+            <nav class="nav">
+                <a href="#work" class="nav-link">Work</a>
+                <a href="#info" class="nav-link">Info</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
 
-            <!-- Work List -->
-            <section class="work" id="work">
-                <h3 class="section-label">Selected Work</h3>
+            <section class="section" id="work">
+                <h2 class="section-title">Work</h2>
 
                 <div class="work-list">
-                    <a href="#" class="work-item">
-                        <div class="work-info">
-                            <h4 class="work-title">Project Alpha</h4>
-                            <p class="work-desc">Brand identity & web design</p>
+                    <article class="work-item">
+                        <div class="work-content">
+                            <h3 class="work-name">Project Alpha</h3>
+                            <p class="work-type">Digital Design, 2024</p>
                         </div>
-                        <span class="work-year">2024</span>
-                    </a>
+                    </article>
 
-                    <a href="#" class="work-item">
-                        <div class="work-info">
-                            <h4 class="work-title">Beta Platform</h4>
-                            <p class="work-desc">Product design & development</p>
+                    <article class="work-item">
+                        <div class="work-content">
+                            <h3 class="work-name">Beta Studio</h3>
+                            <p class="work-type">Brand Identity, 2024</p>
                         </div>
-                        <span class="work-year">2024</span>
-                    </a>
+                    </article>
 
-                    <a href="#" class="work-item">
-                        <div class="work-info">
-                            <h4 class="work-title">Gamma Studio</h4>
-                            <p class="work-desc">Creative direction</p>
+                    <article class="work-item">
+                        <div class="work-content">
+                            <h3 class="work-name">Gamma Platform</h3>
+                            <p class="work-type">Web Development, 2023</p>
                         </div>
-                        <span class="work-year">2023</span>
-                    </a>
+                    </article>
 
-                    <a href="#" class="work-item">
-                        <div class="work-info">
-                            <h4 class="work-title">Delta Systems</h4>
-                            <p class="work-desc">UI/UX design</p>
+                    <article class="work-item">
+                        <div class="work-content">
+                            <h3 class="work-name">Delta Systems</h3>
+                            <p class="work-type">UI/UX Design, 2023</p>
                         </div>
-                        <span class="work-year">2023</span>
-                    </a>
+                    </article>
 
-                    <a href="#" class="work-item">
-                        <div class="work-info">
-                            <h4 class="work-title">Epsilon Lab</h4>
-                            <p class="work-desc">Digital experience</p>
+                    <article class="work-item">
+                        <div class="work-content">
+                            <h3 class="work-name">Epsilon Lab</h3>
+                            <p class="work-type">Creative Direction, 2023</p>
                         </div>
-                        <span class="work-year">2023</span>
-                    </a>
+                    </article>
                 </div>
             </section>
 
-            <!-- About -->
-            <section class="about" id="about">
-                <h3 class="section-label">About</h3>
-                <div class="about-content">
-                    <p>
-                        I'm a designer and developer focused on creating meaningful digital products.
-                        With a background in both design and code, I build experiences that are
-                        simple, functional, and visually compelling.
-                    </p>
-                    <p>
-                        My work spans brand identity, web design, and product development.
-                        I believe in the power of restraint and the beauty of simplicity.
-                    </p>
+            <section class="section" id="info">
+                <h2 class="section-title">Info</h2>
+                <div class="info-content">
+                    <p>Edaen is an independent designer and developer based in Taiwan, working at the intersection of design and technology.</p>
+                    <p>Focused on creating minimal, functional experiences for digital products and brands.</p>
                 </div>
             </section>
 
-            <!-- Contact -->
-            <section class="contact" id="contact">
-                <h3 class="section-label">Contact</h3>
-                <div class="contact-info">
-                    <a href="mailto:hello@edaen.com" class="contact-link">hello@edaen.com</a>
-                    <a href="https://twitter.com/edaen" class="contact-link" target="_blank">Twitter</a>
-                    <a href="https://github.com/edaen" class="contact-link" target="_blank">GitHub</a>
+            <section class="section" id="contact">
+                <h2 class="section-title">Contact</h2>
+                <div class="contact-list">
+                    <a href="mailto:hello@edaen.com" class="contact-item">Email</a>
+                    <a href="https://twitter.com" target="_blank" class="contact-item">Twitter</a>
+                    <a href="https://instagram.com" target="_blank" class="contact-item">Instagram</a>
                 </div>
             </section>
         </main>
 
-        <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2025 Edaen. All rights reserved.</p>
+            <p class="footer-text">© 2025</p>
         </footer>
     </div>
 
